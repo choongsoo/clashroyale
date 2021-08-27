@@ -1,3 +1,9 @@
+# macOS
 */.DS_Store
+
+# only track playground/shared folder
 */playground/*
 !*/playground/shared/
+
+# Visual Paradigm junk
+*/*.vpp.bak*
