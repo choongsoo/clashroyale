@@ -1,0 +1,20 @@
+import requests
+
+
+def player_request()
+
+
+
+
+
+
+url = 'https://api.clashroyale.com/v1/players/%239YJUPU9LY/battlelog'
+
+payload = {}
+headers = {
+    'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6ImQ0OTkxN2MyLWQ3ODgtNDZiNi1iMjZhLTY5NzM2ODNjNWJmZCIsImlhdCI6MTYzMDM1ODI5OSwic3ViIjoiZGV2ZWxvcGVyL2RjMWVmZjViLTg4MWEtNWVhMS0xNWQ3LTNmMzBmYTMxYzg1NiIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI2OS42LjEwNy42NyIsIjY5LjYuMTA4LjE2OSIsIjY5LjYuMTExLjI5IiwiNjkuNi4xMDkuMTYxIiwiNjkuNi4xMTQuMTQ5Il0sInR5cGUiOiJjbGllbnQifV19.FO3jX8a0nVTDSlE_23uzpTp5xbxI_yvqv3SR7N6XPWao8Nt7-zgvtfoSsq1UDAKzVBSAm0qVkkoGTVjipwurww'
+}
+
+response = requests.request('GET', url, headers=headers, data=payload)
+
+print(response.text)
