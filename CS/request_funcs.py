@@ -29,16 +29,26 @@ def email_admin(status_code, message):
                         msg_template.format(status_code, message))
 
 
-def player_request(player_tag: str, endpoint: str, i: int = 0) -> dict:
+def cr_api_request(tag: str, action: str, i: int = 0) -> dict:
     """
     A function to send a /GET request to Clash Royale API with comprehensive error handling.
-    :param player_tag: A string (e.g., '#9YJUPU9LY');
-    :param endpoint: 'info' | 'battlelog';
+    :param tag: Either a player tag or clan tag (e.g., '#9YJUPU9LY' | '#QCQJ8JG');
+    :param action: 'battle_log' | 'player_info' | 'clan_members'
     :param i: An optional counter for potential recursive calls;
     :return: JSON response.
     """
-    url = 'https://api.clashroyale.com/v1/players/{}/{}'.format(
-        quote_plus(player_tag), endpoint)
+    # prep
+    url = 'https://api.clashroyale.com/v1/'
+
+    if action == 'battle_log':
+        url += 'players/' + quote_plus(tag) + '/battlelog'
+    elif action == 'player_info':
+        url += 'players/' + quote_plus(tag)
+    elif action == 'clan_members':
+        url += 'clans/' + quote_plus(tag) + '/members'
+    else:
+        print('action = [battle_log | player_info | clan_members]')
+        exit(1)
 
     token = environ.get('TOKEN')
     headers = {'Authorization': 'Bearer ' + token}
@@ -87,7 +97,7 @@ def player_request(player_tag: str, endpoint: str, i: int = 0) -> dict:
             email_admin(429, message)
 
             # retry request with new token
-            player_request(player_tag, endpoint)
+            cr_api_request(tag, action)
 
     elif status_code == 503:
         # service temprorarily unavailable due to maintenance
@@ -103,7 +113,7 @@ def player_request(player_tag: str, endpoint: str, i: int = 0) -> dict:
 
         i += 1
         sleep(300)  # wait 5 mins then try again by recursion
-        player_request(player_tag, endpoint, i=i)
+        cr_api_request(tag, action, i=i)
 
     else:
         # other errors: simply email admin
@@ -112,6 +122,75 @@ def player_request(player_tag: str, endpoint: str, i: int = 0) -> dict:
         email_admin(status_code, message)
 
     return {'statusCode': status_code, 'body': res}
+
+
+def get_participant_tags(player_tag: str) -> list:
+    """
+    A function to get the player tags of each participant in the given player's battle log.
+    These include both teammates (if any) and opponents.
+    :param player_tag: A string (e.g., '#9YJUPU9LY');
+    :return: A list of player tags.
+    """
+    battle_log_res = cr_api_request(player_tag, 'battle_log')
+
+    if battle_log_res.get('statusCode') != 200:
+        return None  # request failed
+
+    else:
+        battle_log = battle_log_res.get('body')
+        tags = []
+
+        for battle in battle_log:
+            # team
+            team = battle.get('team')
+            for player in team:
+                tag = player.get('tag')
+                if tag != player_tag:
+                    tags.append(tag)
+
+            # opponent
+            for player in battle.get('opponent'):
+                tags.append(player.get('tag'))
+
+        return tags
+
+
+def get_clanmate_tags(player_tag: str) -> list:
+    """
+    A function to get the player tags of each clanmate for the given player.
+    :param player_tag: A string (e.g., '#9YJUPU9LY');
+    :return: A list of player tags.
+    """
+    # get player info
+    player_info_res = cr_api_request(player_tag, 'player_info')
+
+    if player_info_res.get('statusCode') != 200:
+        return None  # request failed
+
+    player = player_info_res.get('body')
+    clan = player.get('clan')
+
+    if clan is not None:
+        clan_tag = clan.get('tag')
+    else:
+        return []  # not part of a clan
+
+    # get clan members
+    clan_members_res = cr_api_request(clan_tag, 'clan_members')
+
+    if clan_members_res.get('statusCode') != 200:
+        return None  # request failed
+
+    else:
+        clan = clan_members_res.get('body')
+        members = clan.get('items')
+        tags = []
+        for member in members:
+            tag = member.get('tag')
+            if tag != player_tag:
+                tags.append(tag)
+
+    return tags
 
 
 if __name__ == '__main__':
@@ -154,4 +233,7 @@ if __name__ == '__main__':
     # ==========================================
 
     # testing
-    print(player_request('#9YJUPU9LY', 'battlelog'))
+    print(cr_api_request('#9YJUPU9LY', 'battle_log'), '\n')
+    print(cr_api_request('#QCQJ8JG', 'clan_members'), '\n')
+    print(get_participant_tags('#9YJUPU9LY'), '\n')
+    print(get_clanmate_tags('#9YJUPU9LY'))
