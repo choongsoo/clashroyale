@@ -1,10 +1,10 @@
 DROP TABLE IF EXISTS BattleInfo CASCADE;
 CREATE TABLE BattleInfo (
-  battleId           char(36) NOT NULL, 
+  battleId           char(64) NOT NULL, 
   battleTime         timestamp NOT NULL, 
   type               varchar(30) NOT NULL, 
   isLadderTournament boolean NOT NULL, 
-  arena              varchar(30) NOT NULL, 
+  arena              varchar(30),  -- arena can sometimes be null
   gameMode           varchar(50) NOT NULL, 
   deckSelection      varchar(30) NOT NULL, 
   PRIMARY KEY (battleId));
@@ -12,7 +12,7 @@ CREATE TABLE BattleInfo (
 
 DROP TABLE IF EXISTS BattleMatch CASCADE;
 CREATE TABLE BattleMatch (
-  battleId  char(36) NOT NULL, 
+  battleId  char(64) NOT NULL, 
   selfTag   varchar(20) NOT NULL, 
   allyTag   varchar(20), 
   rival1Tag varchar(20) NOT NULL, 
@@ -23,7 +23,7 @@ CREATE TABLE BattleMatch (
 
 DROP TABLE IF EXISTS BattleDeck;
 CREATE TABLE BattleDeck (
-  battleId   char(36) NOT NULL, 
+  battleId   char(64) NOT NULL, 
   playerTag  varchar(20) NOT NULL, 
   card1      varchar(30) NOT NULL, 
   card1Level int4 NOT NULL, 
@@ -47,7 +47,7 @@ CREATE TABLE BattleDeck (
 
 DROP TABLE IF EXISTS BattleData;
 CREATE TABLE BattleData (
-  battleId                char(36) NOT NULL, 
+  battleId                char(64) NOT NULL, 
   playerTag               varchar(20) NOT NULL, 
   startingTrophies        int4 NOT NULL, 
   trophyChange            int4, 

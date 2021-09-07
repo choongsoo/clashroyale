@@ -1,32 +1,9 @@
 import requests
 import json
-import smtplib
-import ssl
 from urllib.parse import quote_plus
 from time import sleep
 from os import environ
-from os.path import dirname
-
-
-def email_admin(status_code, message):
-    port = 465  # For SSL
-    smtp_server = "smtp.gmail.com"
-    sender_email = "tom.zhang.dev@gmail.com"
-    receiver_email = "tom.zhang.dev@gmail.com"
-    pass_file = open(
-        '{}/credentials/dev-gmail-pass.txt'.format(dirname(__file__)))
-    password = pass_file.readline()
-    pass_file.close()
-
-    msg_template = """Subject: {}
-
-    {}"""
-
-    context = ssl.create_default_context()
-    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-        server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email,
-                        msg_template.format(status_code, message))
+from helpers import email_admin
 
 
 def cr_api_request(tag: str, action: str, i: int = 0) -> dict:
@@ -191,49 +168,3 @@ def get_clanmate_tags(player_tag: str) -> list:
                 tags.append(tag)
 
     return tags
-
-
-if __name__ == '__main__':
-    # ==========================================
-    #                Load API Key
-    # ==========================================
-    # open api_keys.json
-    try:
-        f = open('{}/credentials/api_keys.json'.format(dirname(__file__)))
-    except FileNotFoundError:
-        print('ERROR: SYE/CS/credentials/api_keys.json not found.')
-        exit(1)
-
-    # load api keys
-    try:
-        api_keys = json.load(f)
-    except json.decoder.JSONDecodeError:
-        print('ERROR: Invalid JSON content in api_keys.json')
-        exit(1)
-
-    # validate length
-    key_names = list(api_keys.keys())
-    if len(key_names) == 0:
-        print('ERROR: No API key found in api_keys.json')
-
-    # use first key available
-    curr_key = key_names[0]
-
-    # get bearer token
-    try:
-        token = api_keys[curr_key]
-    except KeyError:
-        print('ERROR: API key "{}" does not exist in api_keys.json'.format(curr_key))
-        exit(1)
-
-    # save vars as environment variables
-    environ['API_KEYS'] = json.dumps(api_keys)
-    environ['CURR_KEY'] = str(curr_key)
-    environ['TOKEN'] = str(token)
-    # ==========================================
-
-    # testing
-    print(cr_api_request('#9YJUPU9LY', 'battle_log'), '\n')
-    print(cr_api_request('#QCQJ8JG', 'clan_members'), '\n')
-    print(get_participant_tags('#9YJUPU9LY'), '\n')
-    print(get_clanmate_tags('#9YJUPU9LY'))

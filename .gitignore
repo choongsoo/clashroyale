@@ -1,5 +1,5 @@
 # macOS
-*/.DS_Store
+**/.DS_Store
 
 # only track playground/shared folder
 */playground/*
@@ -11,3 +11,6 @@
 # only track api keys since they are not critical credentials
 */credentials/*
 !*/credentials/api_keys.json
+
+# pychache
+**/__pycache__/
