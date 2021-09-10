@@ -3,6 +3,9 @@ import ssl
 from os.path import dirname
 
 
+# A collection of globally-shared helper functions
+
+
 def email_admin(status_code, message):
     port = 465  # For SSL
     smtp_server = "smtp.gmail.com"
