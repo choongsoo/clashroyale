@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS BattleInfo CASCADE;
 CREATE TABLE BattleInfo (
-  battleId           char(64) NOT NULL, 
+  battleId           char(64) NOT NULL,  -- made via sha256()
   battleTime         timestamp NOT NULL, 
   type               varchar(30) NOT NULL, 
   isLadderTournament boolean NOT NULL, 
@@ -10,39 +10,23 @@ CREATE TABLE BattleInfo (
   PRIMARY KEY (battleId));
 
 
-DROP TABLE IF EXISTS BattleMatch CASCADE;
-CREATE TABLE BattleMatch (
-  battleId  char(64) NOT NULL, 
-  selfTag   varchar(20) NOT NULL, 
-  allyTag   varchar(20), 
-  rival1Tag varchar(20) NOT NULL, 
-  rival2Tag varchar(20), 
-  PRIMARY KEY (battleId, selfTag),
+DROP TABLE IF EXISTS BattleParticipant CASCADE;
+CREATE TABLE BattleParticipant (
+  battleId    char(64) NOT NULL, 
+  playerTag   varchar(20) NOT NULL, 
+  team        boolean NOT NULL, 
+  PRIMARY KEY (battleId, playerTag),
   FOREIGN KEY (battleId) REFERENCES BattleInfo (battleId));
 
 
 DROP TABLE IF EXISTS BattleDeck;
 CREATE TABLE BattleDeck (
-  battleId   char(64) NOT NULL, 
-  playerTag  varchar(20) NOT NULL, 
-  card1      varchar(30) NOT NULL, 
-  card1Level int4 NOT NULL, 
-  card2      varchar(30) NOT NULL, 
-  card2Level int4 NOT NULL, 
-  card3      varchar(30) NOT NULL, 
-  card3Level int4 NOT NULL, 
-  card4      varchar(30) NOT NULL, 
-  card4Level int4 NOT NULL, 
-  card5      varchar(30) NOT NULL, 
-  card5Level int4 NOT NULL, 
-  card6      varchar(30) NOT NULL, 
-  card6Level int4 NOT NULL, 
-  card7      varchar(30) NOT NULL, 
-  card7Level int4 NOT NULL, 
-  card8      varchar(30) NOT NULL, 
-  card8Level int4 NOT NULL, 
-  PRIMARY KEY (battleId, playerTag),
-  FOREIGN KEY (battleId, playerTag) REFERENCES BattleMatch (battleId, selfTag));
+  battleId    char(64) NOT NULL, 
+  playerTag   varchar(20) NOT NULL, 
+  card        varchar(30) NOT NULL, 
+  cardLevel   int4 NOT NULL, 
+  PRIMARY KEY (battleId, playerTag, card),
+  FOREIGN KEY (battleId, playerTag) REFERENCES BattleParticipant (battleId, playerTag));
 
 
 DROP TABLE IF EXISTS BattleData;
@@ -57,7 +41,7 @@ CREATE TABLE BattleData (
   kingTowerHitPoints      int4, 
   clanTag                 varchar(20), 
   PRIMARY KEY (battleId, playerTag),
-  FOREIGN KEY (battleId, playerTag) REFERENCES BattleMatch (battleId, selfTag));
+  FOREIGN KEY (battleId, playerTag) REFERENCES BattleParticipant (battleId, playerTag));
 
 
 DROP TABLE IF EXISTS PlayerInfo;
