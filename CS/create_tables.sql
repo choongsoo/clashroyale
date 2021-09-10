@@ -33,14 +33,19 @@ DROP TABLE IF EXISTS BattleData;
 CREATE TABLE BattleData (
   battleId                char(64) NOT NULL, 
   playerTag               varchar(20) NOT NULL, 
-  startingTrophies        int4 NOT NULL, 
+  clanTag                 varchar(20), 
+  startingTrophies        int4, 
   trophyChange            int4, 
-  crowns                  int4 NOT NULL, 
+  crowns                  int4, 
   princessTower1HitPoints int4, 
   princessTower2HitPoints int4, 
   kingTowerHitPoints      int4, 
-  clanTag                 varchar(20), 
-  PRIMARY KEY (battleId, playerTag),
+  boatBattleSide          char(8), 
+  boatBattleWon           boolean, 
+  newBoatTowersDestroyed  int4, 
+  prevBoatTowersDestroyed int4, 
+  remainingBoatTowers     int4, 
+  PRIMARY KEY (battleId, playerTag), 
   FOREIGN KEY (battleId, playerTag) REFERENCES BattleParticipant (battleId, playerTag));
 
 

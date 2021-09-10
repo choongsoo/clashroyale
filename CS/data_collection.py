@@ -126,10 +126,12 @@ def insert_battle(con, data: dict) -> None:
     # ------------------------------------------
 
     # TODO
+    # Note: table is refactored to accommodate boat battles
 
 
 # FIXME for testing only (delete afterwards)
 if __name__ == '__main__':
     battle_log_res = cr_api_request('#9YJUPU9LY', 'battle_log')
-    battle1 = battle_log_res.get('body')[0]
-    insert_battle(CON, battle1)
+    # battle1 = battle_log_res.get('body')[0]
+    # insert_battle(CON, battle1)
+    print(battle_log_res.get('body'))
