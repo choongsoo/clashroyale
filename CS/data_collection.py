@@ -1,6 +1,7 @@
 import psycopg2
 import hashlib
 import pandas as pd
+import numpy as np
 
 import extensions.load_api_key
 from extensions.connect_db import DBConnection
@@ -107,6 +108,75 @@ def insert_battle(con, data: dict) -> None:
     psql_insert(CON, 'BattleParticipant', insertion_tuple)
 
     # ------------------------------------------
+    # insert into table BattleData
+    # ------------------------------------------
+
+    # make sure all db columns exist in current data (if not set null)
+    curr_cols = df.columns
+    all_cols = pd.Series(['clan', 'startingTrophies', 'trophyChange', 'crowns',
+                          'princessTowersHitPoints', 'kingTowerHitPoints',
+                          'boatBattleSide', 'boatBattleWon',
+                          'newTowersDestroyed', 'prevTowersDestroyed', 'remainingTowers'])
+
+    def f(col):
+        if col not in curr_cols:
+            df[col] = None
+    all_cols.apply(f)
+
+    df = df.replace({np.nan: None})  # change NaN to None
+
+    # process clan column
+    df['clan'] = df['clan'].apply(lambda entry: entry.get(
+        'tag') if entry is not None else None)
+
+    # split princess tower hitpoints into separate columns
+    df_princess = []
+
+    def f(col):
+        values = [None, None]
+        if col is not None:
+            if len(col) == 2:
+                values = col
+            elif len(col) == 1:
+                values = col + [None]
+        df_princess.append(values)
+
+    df['princessTowersHitPoints'].apply(f)
+
+    df_princess = pd.DataFrame(df_princess, columns=[
+                               'princessTower1HitPoints', 'princessTower2HitPoints'])
+    df_princess = df_princess.replace({np.nan: None})
+
+    df = pd.concat([df, df_princess], axis=1)
+
+    # process boatBattle (1v1 always) columns
+    if data.get('type') == 'boatBattle':
+        # match attacker/defender status with team sides
+        df.loc[df['team'], 'boatBattleSide'] = data.get('boatBattleSide')
+        df.loc[~(df['team']), 'boatBattleSide'] = 'attacker' if data.get(
+            'boatBattleSide') != 'attacker' else 'defender'
+
+        # match win status with team sides
+        df.loc[df['team'], 'boatBattleWon'] = data.get('boatBattleWon')
+        df.loc[~(df['team']), 'boatBattleWon'] = not data.get('boatBattleWon')
+
+        # these are shared values
+        df['newTowersDestroyed'] = data.get('newTowersDestroyed')
+        df['prevTowersDestroyed'] = data.get('prevTowersDestroyed')
+        df['remainingTowers'] = data.get('remainingTowers')
+
+    # make subset for insertion
+    df_sub = df[['battleId', 'tag', 'clan',
+                 'startingTrophies', 'trophyChange', 'crowns',
+                 'princessTower1HitPoints', 'princessTower2HitPoints', 'kingTowerHitPoints',
+                 'boatBattleSide', 'boatBattleWon',
+                 'newTowersDestroyed', 'prevTowersDestroyed', 'remainingTowers']]
+
+    # bulk insertion
+    insertion_tuple = df_sub.to_records(index=False).tolist()
+    psql_insert(CON, 'BattleData', insertion_tuple)
+
+    # ------------------------------------------
     # insert into table BattleDeck
     # ------------------------------------------
 
@@ -121,17 +191,10 @@ def insert_battle(con, data: dict) -> None:
     insertion_tuple = df_sub.to_records(index=False).tolist()
     psql_insert(CON, 'BattleDeck', insertion_tuple)
 
-    # ------------------------------------------
-    # insert into table BattleData
-    # ------------------------------------------
-
-    # TODO
-    # Note: table is refactored to accommodate boat battles
-
 
 # FIXME for testing only (delete afterwards)
 if __name__ == '__main__':
     battle_log_res = cr_api_request('#9YJUPU9LY', 'battle_log')
-    # battle1 = battle_log_res.get('body')[0]
-    # insert_battle(CON, battle1)
-    print(battle_log_res.get('body'))
+    battle1 = battle_log_res.get('body')[1]
+    insert_battle(CON, battle1)
+    # print(battle_log_res.get('body'))
