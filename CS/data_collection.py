@@ -1,18 +1,20 @@
 import psycopg2
 import hashlib
 import pandas as pd
-import numpy as np
+from numpy import nan
+from time import sleep
+from random import randrange
 
 import extensions.load_api_key
 from extensions.connect_db import DBConnection
-from request_funcs import cr_api_request
-from helpers import email_admin
+from helpers import email_admin, cr_api_request, get_clanmate_tags
 
 
 def psql_insert(con, table: str, insert_tuple: tuple) -> None:
     """
     A helper function that does exactly what INSERT INTO does
     (when inserting into all columns).
+    :param con: A psycopg2 connection object;
     :param table: Name of the table;
     :param insert_tuple: Values to insert - usually a single tuple,
     but if bulk=True, a tuple of tuples.
@@ -29,20 +31,26 @@ def psql_insert(con, table: str, insert_tuple: tuple) -> None:
             table, insert_tuple_format)
 
         try:
+            # execute insertion
             if not bulk:
                 cur.execute(insert_cmd, insert_tuple)
             else:
                 cur.executemany(insert_cmd, insert_tuple)
-        # FIXME iff violates primary key constraint, do not email
+        except psycopg2.IntegrityError:
+            # if primary/foreign key constraint violation, roll back, do not email
+            con.rollback()
         except psycopg2.Error as e:
-            email_admin(
-                400, 'ERROR: Insertion: {}.'.format(str(e).strip()))
-            return
+            # email admin on all other errors
+            email_admin(400, 'ERROR: Insertion: {}.'.format(str(e).strip()))
+        else:
+            # commit if successful
+            con.commit()
 
 
 def insert_battle(con, data: dict) -> None:
     """
     Inserts a single battle into the DB.
+    :param con: A psycopg2 connection object;
     :param data: A dictionary (subset) taken directly from a battle_log request.
     The data contains information for exactly one battle.
     """
@@ -119,7 +127,7 @@ def insert_battle(con, data: dict) -> None:
             df[col] = None
     all_cols.apply(f)
 
-    df = df.replace({np.nan: None})  # change NaN to None
+    df = df.replace({nan: None})  # change NaN to None
 
     # process clan column
     df['clan'] = df['clan'].apply(lambda entry: entry.get(
@@ -141,7 +149,7 @@ def insert_battle(con, data: dict) -> None:
 
     df_princess = pd.DataFrame(df_princess, columns=[
                                'princessTower1HitPoints', 'princessTower2HitPoints'])
-    df_princess = df_princess.replace({np.nan: None})
+    df_princess = df_princess.replace({nan: None})
 
     df = pd.concat([df, df_princess], axis=1)
 
@@ -188,12 +196,57 @@ def insert_battle(con, data: dict) -> None:
     psql_insert(con, 'BattleDeck', insertion_tuple)
 
 
+def collect_data(con, init_player_tag: str) -> None:
+    """
+    Collect data recursively using the technique called crawling.
+    :param con: A psycopg2 connection object;
+    :param init_player_tag: The initial player tag to start data crawling.
+    """
+    sleep(1.5)  # this is essential (make sure our IP address is not banned)!
+
+    # get battle log of current player
+    battle_log_res = cr_api_request(init_player_tag, 'battle_log')
+
+    if battle_log_res.get('statusCode') == 200 and len(battle_log_res.get('body')) > 0:
+        # a list of dict, where each dict is a battle
+        battle_log = battle_log_res.get('body')
+
+        # insert all battles for current player
+        for battle in battle_log:
+            insert_battle(con, battle)
+
+        # randomly pick an opponent from one of the battles, then recurse
+        random_battle = battle_log[randrange(len(battle_log))]
+        opponents = random_battle.get('opponent')
+        random_opponent = opponents[randrange(len(opponents))]
+        tag = random_opponent.get('tag')
+        collect_data(con, tag)
+
+    else:
+        # current player has no battle log available
+        # try a random clanmate
+        clanmate_tags = get_clanmate_tags(init_player_tag)
+        if len(clanmate_tags) > 0:
+            # player has clanmates
+            random_tag = clanmate_tags[randrange(len(clanmate_tags))]
+            collect_data(con, random_tag)
+        else:
+            # player has no clanmates availble
+            # randomly pick a player from the US leaderboard (57000249)
+            rankings_res = cr_api_request('57000249', 'player_rankings')
+            if rankings_res.get('statusCode') == 200:
+                players = rankings_res.get('body').get('items')
+                random_player = players[randrange(len(players))]
+                tag = random_player.get('tag')
+                collect_data(con, tag)
+            else:
+                email_admin(
+                    500, 'Critical failure: Cannot retrive player rankings; data collection terminated.')
+                exit(1)
+
+
 # FIXME for testing only (delete afterwards)
 if __name__ == '__main__':
-    DB = DBConnection()
-    CON = DB.get_con()
-
-    battle_log_res = cr_api_request('#9YJUPU9LY', 'battle_log')
-    battle1 = battle_log_res.get('body')[1]
-    insert_battle(CON, battle1)
-    # print(battle_log_res.get('body'))
+    db = DBConnection()
+    con = db.get_con()
+    collect_data(con, '#9YJUPU9LY')
