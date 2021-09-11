@@ -9,10 +9,6 @@ from request_funcs import cr_api_request
 from helpers import email_admin
 
 
-DB = DBConnection()
-CON = DB.get_con()
-
-
 def psql_insert(con, table: str, insert_tuple: tuple) -> None:
     """
     A helper function that does exactly what INSERT INTO does
@@ -105,7 +101,7 @@ def insert_battle(con, data: dict) -> None:
 
     # bulk insertion
     insertion_tuple = df_sub.to_records(index=False).tolist()
-    psql_insert(CON, 'BattleParticipant', insertion_tuple)
+    psql_insert(con, 'BattleParticipant', insertion_tuple)
 
     # ------------------------------------------
     # insert into table BattleData
@@ -174,7 +170,7 @@ def insert_battle(con, data: dict) -> None:
 
     # bulk insertion
     insertion_tuple = df_sub.to_records(index=False).tolist()
-    psql_insert(CON, 'BattleData', insertion_tuple)
+    psql_insert(con, 'BattleData', insertion_tuple)
 
     # ------------------------------------------
     # insert into table BattleDeck
@@ -189,11 +185,14 @@ def insert_battle(con, data: dict) -> None:
 
     # bulk insertion
     insertion_tuple = df_sub.to_records(index=False).tolist()
-    psql_insert(CON, 'BattleDeck', insertion_tuple)
+    psql_insert(con, 'BattleDeck', insertion_tuple)
 
 
 # FIXME for testing only (delete afterwards)
 if __name__ == '__main__':
+    DB = DBConnection()
+    CON = DB.get_con()
+
     battle_log_res = cr_api_request('#9YJUPU9LY', 'battle_log')
     battle1 = battle_log_res.get('body')[1]
     insert_battle(CON, battle1)
