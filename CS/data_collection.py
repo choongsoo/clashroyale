@@ -10,6 +10,9 @@ from extensions.connect_db import DBConnection
 from helpers import email_admin, cr_api_request, get_clanmate_tags
 
 
+SLEEP_TIME = 0.5
+
+
 def psql_insert(con, table: str, insert_tuple: tuple) -> None:
     """
     A helper function that does exactly what INSERT INTO does
@@ -202,10 +205,9 @@ def collect_data(con, init_player_tag: str) -> None:
     :param con: A psycopg2 connection object;
     :param init_player_tag: The initial player tag to start data crawling.
     """
-    sleep(1.5)  # this is essential (make sure our IP address is not banned)!
-
     # get battle log of current player
     battle_log_res = cr_api_request(init_player_tag, 'battle_log')
+    sleep(SLEEP_TIME)
 
     if battle_log_res.get('statusCode') == 200 and len(battle_log_res.get('body')) > 0:
         # a list of dict, where each dict is a battle
@@ -226,6 +228,8 @@ def collect_data(con, init_player_tag: str) -> None:
         # current player has no battle log available
         # try a random clanmate
         clanmate_tags = get_clanmate_tags(init_player_tag)
+        sleep(SLEEP_TIME)
+
         if len(clanmate_tags) > 0:
             # player has clanmates
             random_tag = clanmate_tags[randrange(len(clanmate_tags))]
@@ -234,6 +238,7 @@ def collect_data(con, init_player_tag: str) -> None:
             # player has no clanmates availble
             # randomly pick a player from the US leaderboard (57000249)
             rankings_res = cr_api_request('57000249', 'player_rankings')
+            sleep(SLEEP_TIME)
             if rankings_res.get('statusCode') == 200:
                 players = rankings_res.get('body').get('items')
                 random_player = players[randrange(len(players))]
