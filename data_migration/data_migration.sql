@@ -1,23 +1,25 @@
 -- ==========================================
--- Copy table into new DB
+-- Notes
 -- ==========================================
--- 1. Export table (run in command line, takes 2-3 hours, 32 GB)
+-- Instead of running shell commands locally, use an HPCC
+-- ssh zhang@ada.hpc.stlawu.edu
+-- Create scripts: slurm*.run
+-- Modify "email" and "PGPASSWORD" to the real values
+-- sbatch slurm*.run
+
+
+-- ==========================================
+-- Copy table 'clash' from DB 'hotslogs' into new DB 'clash'
+-- ==========================================
+-- 1. Export table (takes 2-3 hours; output file size ~32 GB)
 -- pg_dump -U clashuser -h 10.32.95.90 -t clash hotslogs > copy_clash.sql
 
--- 2. Import table into new DB (run in command line)
+-- 2. Import table into new DB
 -- psql -U clashuser -h 10.32.95.90 -d clash -f copy_clash.sql
-
--- [Optional]: Instead of running the commands locally, use an HPCC
--- ssh zhang@ada.hpc.stlawu.edu
--- Create scripts: slurm_copy_clash.run and slurm_import_clash.run
--- Modify "email" and "PGPASSWORD" to the real values
--- sbatch slurm_copy_clash.run
--- Wait 2-3 hours, then check if copy_clash.sql has been created
--- sbatch slurm_import_clash.run
 
 
 -- ==========================================
--- Distribute original table into new tables within new DB
+-- Distribute original table into new tables within new DB 'clash'
 -- ==========================================
 
 -- Remove junk characters from deck
