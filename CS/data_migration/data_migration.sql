@@ -149,7 +149,8 @@ FROM Clash;
 
 
 
--- TODO: Extensive testing!
+-- TODO: Extensive testing on ADA!
+-- \c szhan18_clash
 -- drop table clash;
 -- create table clash as select * from clash0 limit 3;
 -- truncate table battleinfo cascade;
