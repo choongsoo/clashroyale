@@ -1,12 +1,14 @@
 DROP TABLE IF EXISTS BattleInfo CASCADE;
 CREATE TABLE BattleInfo (
   battleId           char(64) NOT NULL,  -- made via sha256()
-  battleTime         timestamp NOT NULL, 
-  type               varchar(30) NOT NULL, 
-  isLadderTournament boolean NOT NULL, 
-  arena              varchar(30),  -- arena can sometimes be null
-  gameMode           varchar(50) NOT NULL, 
-  deckSelection      varchar(30) NOT NULL, 
+  battleTime         timestamp, 
+  type               varchar(30), 
+  isLadderTournament boolean, 
+  arenaId            int4, 
+  arena              varchar(30), 
+  gameModeId         int4, 
+  gameMode           varchar(50), 
+  deckSelection      varchar(30), 
   PRIMARY KEY (battleId));
 
 
@@ -14,7 +16,7 @@ DROP TABLE IF EXISTS BattleParticipant CASCADE;
 CREATE TABLE BattleParticipant (
   battleId    char(64) NOT NULL, 
   playerTag   varchar(20) NOT NULL, 
-  team        boolean NOT NULL, 
+  team        boolean, 
   PRIMARY KEY (battleId, playerTag),
   FOREIGN KEY (battleId) REFERENCES BattleInfo (battleId));
 
