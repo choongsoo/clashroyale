@@ -199,6 +199,29 @@ def insert_battle(con, data: dict) -> None:
     psql_insert(con, 'BattleDeck', insertion_tuple)
 
 
+def get_random_playertag(con) -> str:
+    """
+    A function that selects a player tag by random within table BattleParticipant.
+    :return: Either a string or None.
+    """
+    with con.cursor() as cur:
+        try:
+            cur.execute("""
+                SELECT playerTag
+                FROM BattleParticipant OFFSET FLOOR(RANDOM() * (
+                    SELECT COUNT(*) FROM BattleParticipant))
+                LIMIT 1;
+            """)
+            res = cur.fetchone()  # a tuple
+            if res is not None:
+                return res[0]
+            else:
+                return None
+        except psycopg2.Error as e:
+            email_admin(
+                400, 'ERROR: Get random playerTag: {}.'.format(str(e).strip()))
+
+
 def collect_data(con, init_player_tag: str) -> None:
     """
     Collect data recursively using the technique called crawling.
@@ -230,28 +253,55 @@ def collect_data(con, init_player_tag: str) -> None:
         clanmate_tags = get_clanmate_tags(init_player_tag)
         sleep(SLEEP_TIME)
 
-        if len(clanmate_tags) > 0:
+        if clanmate_tags is not None and len(clanmate_tags) > 0:
             # player has clanmates
+            # first insert battlelogs for all clanmates
+            for tag in clanmate_tags:
+                battle_log_res = cr_api_request(tag, 'battle_log')
+                sleep(SLEEP_TIME)
+
+                if battle_log_res.get('statusCode') == 200 and len(battle_log_res.get('body')) > 0:
+                    battle_log = battle_log_res.get('body')
+                    for battle in battle_log:
+                        insert_battle(con, battle)
+
+            # then randomly pick a clanmate and recurse
             random_tag = clanmate_tags[randrange(len(clanmate_tags))]
             collect_data(con, random_tag)
         else:
             # player has no clanmates availble
-            # randomly pick a player from the US leaderboard (57000249)
-            rankings_res = cr_api_request('57000249', 'player_rankings')
-            sleep(SLEEP_TIME)
-            if rankings_res.get('statusCode') == 200:
-                players = rankings_res.get('body').get('items')
-                random_player = players[randrange(len(players))]
-                tag = random_player.get('tag')
-                collect_data(con, tag)
+            # randomly pick a player from table battleParticipant
+            random_tag = get_random_playertag(con)
+            if random_tag is not None:
+                # recurse on random playerTag taken from existing player pool
+                collect_data(con, random_tag)
             else:
-                email_admin(
-                    500, 'Critical failure: Cannot retrive player rankings; data collection terminated.')
-                exit(1)
+                # last resort: select randomly from US leaderboard
+                rankings_res = cr_api_request('57000249', 'player_rankings')
+                sleep(SLEEP_TIME)
+                if rankings_res.get('statusCode') == 200:
+                    players = rankings_res.get('body').get('items')
+                    random_player = players[randrange(len(players))]
+                    tag = random_player.get('tag')
+                    collect_data(con, tag)
+                else:
+                    email_admin(
+                        500, 'Critical failure: Cannot retrive player rankings; data collection terminated.')
+                    exit(1)
 
 
-# FIXME for testing only (delete afterwards)
-if __name__ == '__main__':
+def initiate_data_collection() -> None:
+    """
+    The master function to use for initiating the data collection process.
+    """
     db = DBConnection()
     con = db.get_con()
-    collect_data(con, '#9YJUPU9LY')
+
+    init_player_tag = '#9YJUPU9LY'  # default to myself
+
+    # use random player tag from existing player pool if any
+    random_tag = get_random_playertag(con)
+    if random_tag is not None:
+        init_player_tag = random_tag
+
+    collect_data(con, init_player_tag)

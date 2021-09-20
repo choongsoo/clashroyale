@@ -4,7 +4,7 @@
 #SBATCH --mail-user=email@example.com  # Where to send mail...change it to you
 #SBATCH --ntasks=1                   # Run a single task		
 #SBATCH --mem=100gb                     # Job memory request
-#SBATCH --time=3000:00:00               # Time limit hrs:min:sec
+#SBATCH --time=99:00:00               # Time limit hrs:min:sec
 #SBATCH --output=slurm_migrate_clash_%j.log   # Standard output and error log
 
 

@@ -1,2 +1,5 @@
+from data_collection import initiate_data_collection
+
+
 if __name__ == '__main__':
-    pass  # TODO this is the main app
+    initiate_data_collection()
