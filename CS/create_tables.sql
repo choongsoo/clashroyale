@@ -26,7 +26,7 @@ CREATE TABLE BattleDeck (
   battleId    char(64) NOT NULL, 
   playerTag   varchar(20) NOT NULL, 
   card        varchar(30) NOT NULL, 
-  cardLevel   int4 NOT NULL, 
+  cardLevel   int4, 
   PRIMARY KEY (battleId, playerTag, card),
   FOREIGN KEY (battleId, playerTag) REFERENCES BattleParticipant (battleId, playerTag));
 

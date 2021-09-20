@@ -114,22 +114,22 @@ DF4 AS (
     FROM DF3
 )
 INSERT INTO BattleDeck
-SELECT idHash, leftTag, leftCard1, leftLevel1::INT FROM DF4 UNION ALL
-SELECT idHash, leftTag, leftCard2, leftLevel2::INT FROM DF4 UNION ALL
-SELECT idHash, leftTag, leftCard3, leftLevel3::INT FROM DF4 UNION ALL
-SELECT idHash, leftTag, leftCard4, leftLevel4::INT FROM DF4 UNION ALL
-SELECT idHash, leftTag, leftCard5, leftLevel5::INT FROM DF4 UNION ALL
-SELECT idHash, leftTag, leftCard6, leftLevel6::INT FROM DF4 UNION ALL
-SELECT idHash, leftTag, leftCard7, leftLevel7::INT FROM DF4 UNION ALL
-SELECT idHash, leftTag, leftCard8, leftLevel8::INT FROM DF4 UNION ALL
-SELECT idHash, rightTag, rightCard1, rightLevel1::INT FROM DF4 UNION ALL
-SELECT idHash, rightTag, rightCard2, rightLevel2::INT FROM DF4 UNION ALL
-SELECT idHash, rightTag, rightCard3, rightLevel3::INT FROM DF4 UNION ALL
-SELECT idHash, rightTag, rightCard4, rightLevel4::INT FROM DF4 UNION ALL
-SELECT idHash, rightTag, rightCard5, rightLevel5::INT FROM DF4 UNION ALL
-SELECT idHash, rightTag, rightCard6, rightLevel6::INT FROM DF4 UNION ALL
-SELECT idHash, rightTag, rightCard7, rightLevel7::INT FROM DF4 UNION ALL
-SELECT idHash, rightTag, rightCard8, rightLevel8::INT FROM DF4;
+SELECT idHash, leftTag, CASE WHEN leftCard1 = '' THEN 'leftCard1' ELSE leftCard1 END, NULLIF(leftLevel1, '')::INT FROM DF4 UNION ALL
+SELECT idHash, leftTag, CASE WHEN leftCard2 = '' THEN 'leftCard2' ELSE leftCard2 END, NULLIF(leftLevel2, '')::INT FROM DF4 UNION ALL
+SELECT idHash, leftTag, CASE WHEN leftCard3 = '' THEN 'leftCard3' ELSE leftCard3 END, NULLIF(leftLevel3, '')::INT FROM DF4 UNION ALL
+SELECT idHash, leftTag, CASE WHEN leftCard4 = '' THEN 'leftCard4' ELSE leftCard4 END, NULLIF(leftLevel4, '')::INT FROM DF4 UNION ALL
+SELECT idHash, leftTag, CASE WHEN leftCard5 = '' THEN 'leftCard5' ELSE leftCard5 END, NULLIF(leftLevel5, '')::INT FROM DF4 UNION ALL
+SELECT idHash, leftTag, CASE WHEN leftCard6 = '' THEN 'leftCard6' ELSE leftCard6 END, NULLIF(leftLevel6, '')::INT FROM DF4 UNION ALL
+SELECT idHash, leftTag, CASE WHEN leftCard7 = '' THEN 'leftCard7' ELSE leftCard7 END, NULLIF(leftLevel7, '')::INT FROM DF4 UNION ALL
+SELECT idHash, leftTag, CASE WHEN leftCard8 = '' THEN 'leftCard8' ELSE leftCard8 END, NULLIF(leftLevel8, '')::INT FROM DF4 UNION ALL
+SELECT idHash, rightTag, CASE WHEN rightCard1 = '' THEN 'rightCard1' ELSE rightCard1 END, NULLIF(rightLevel1, '')::INT FROM DF4 UNION ALL
+SELECT idHash, rightTag, CASE WHEN rightCard2 = '' THEN 'rightCard2' ELSE rightCard2 END, NULLIF(rightLevel2, '')::INT FROM DF4 UNION ALL
+SELECT idHash, rightTag, CASE WHEN rightCard3 = '' THEN 'rightCard3' ELSE rightCard3 END, NULLIF(rightLevel3, '')::INT FROM DF4 UNION ALL
+SELECT idHash, rightTag, CASE WHEN rightCard4 = '' THEN 'rightCard4' ELSE rightCard4 END, NULLIF(rightLevel4, '')::INT FROM DF4 UNION ALL
+SELECT idHash, rightTag, CASE WHEN rightCard5 = '' THEN 'rightCard5' ELSE rightCard5 END, NULLIF(rightLevel5, '')::INT FROM DF4 UNION ALL
+SELECT idHash, rightTag, CASE WHEN rightCard6 = '' THEN 'rightCard6' ELSE rightCard6 END, NULLIF(rightLevel6, '')::INT FROM DF4 UNION ALL
+SELECT idHash, rightTag, CASE WHEN rightCard7 = '' THEN 'rightCard7' ELSE rightCard7 END, NULLIF(rightLevel7, '')::INT FROM DF4 UNION ALL
+SELECT idHash, rightTag, CASE WHEN rightCard8 = '' THEN 'rightCard8' ELSE rightCard8 END, NULLIF(rightLevel8, '')::INT FROM DF4;
 
 
 -- ==========================================
