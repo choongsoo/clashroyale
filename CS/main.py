@@ -1,5 +1,5 @@
-from data_collection import initiate_data_collection
+from data_collection import collect_data
 
 
 if __name__ == '__main__':
-    initiate_data_collection()
+    collect_data()

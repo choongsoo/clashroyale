@@ -4,13 +4,14 @@ import pandas as pd
 from numpy import nan
 from time import sleep
 from random import randrange
+from collections import deque
 
 import extensions.load_api_key
 from extensions.connect_db import DBConnection
-from helpers import email_admin, cr_api_request, get_clanmate_tags
+from helpers import email_admin, cr_api_request
 
 
-SLEEP_TIME = 0.5
+SLEEP_TIME = 0.3
 
 
 def psql_insert(con, table: str, insert_tuple: tuple) -> None:
@@ -64,8 +65,8 @@ def insert_battle(con, data: dict) -> None:
     # sha256 of battleTime and player tags of every participant in alphabetical order
     battleTime = data.get('battleTime')
 
-    team = data.get('team')
-    opponent = data.get('opponent')
+    team = data.get('team') or []
+    opponent = data.get('opponent') or []
 
     participants = team + opponent
     tags = [player.get('tag') for player in participants]
@@ -83,17 +84,23 @@ def insert_battle(con, data: dict) -> None:
     type = data.get('type')
     isLadderTournament = data.get('isLadderTournament')
     try:
-        arena = data.get('arena').get('name')
+        arena = data.get('arena')
+        arena_id = arena.get('id')
+        arena_name = arena.get('name')
     except AttributeError:
-        arena = None
+        arena_id = None
+        arena_name = None
     try:
-        gameMode = data.get('gameMode').get('name')
+        gameMode = data.get('gameMode')
+        game_mode_id = gameMode.get('id')
+        game_mode_name = gameMode.get('name')
     except AttributeError:
-        gameMode = None
+        game_mode_id = None
+        game_mode_name = None
     deckSelection = data.get('deckSelection')
 
-    psql_insert(con, 'BattleInfo', (battleId, battleTime, type,
-                isLadderTournament, arena, gameMode, deckSelection))
+    psql_insert(con, 'BattleInfo', (battleId, battleTime, type, isLadderTournament,
+                                    arena_id, arena_name, game_mode_id, game_mode_name, deckSelection))
 
     # ------------------------------------------
     # insert into table BattleParticipant
@@ -199,17 +206,22 @@ def insert_battle(con, data: dict) -> None:
     psql_insert(con, 'BattleDeck', insertion_tuple)
 
 
-def get_random_playertag(con) -> str:
+def get_last_playertag(con) -> str:
     """
-    A function that selects a player tag by random within table BattleParticipant.
+    A function that selects the last player tag within table BattleParticipant.
     :return: Either a string or None.
     """
     with con.cursor() as cur:
         try:
             cur.execute("""
                 SELECT playerTag
-                FROM BattleParticipant OFFSET FLOOR(RANDOM() * (
-                    SELECT COUNT(*) FROM BattleParticipant))
+                FROM BattleParticipant
+                WHERE battleId = (
+                    SELECT battleId
+                    FROM BattleInfo
+                    ORDER BY battleTime DESC
+                    LIMIT 1
+                )
                 LIMIT 1;
             """)
             res = cur.fetchone()  # a tuple
@@ -222,86 +234,113 @@ def get_random_playertag(con) -> str:
                 400, 'ERROR: Get random playerTag: {}.'.format(str(e).strip()))
 
 
-def collect_data(con, init_player_tag: str) -> None:
+def collect_data(init_player_tag_manual=None) -> None:
     """
     Collect data recursively using the technique called crawling.
+    Each node is a battle; and from this battle, a list of players can be produced:
+    All battle participants + their clanmates.
+    Then each player from this list yields a battle log (more battles).
+    Now recurse with a level-order traversal to enhance diversity.
     :param con: A psycopg2 connection object;
-    :param init_player_tag: The initial player tag to start data crawling.
+    :param init_player_tag_manual: A player tag to initialize data collection manually.
     """
-    # get battle log of current player
+    db = DBConnection()
+    con = db.get_con()
+
+    # need an initial battle
+
+    if init_player_tag_manual is None:
+        init_player_tag = '#9YJUPU9LY'  # default to myself
+
+        # use last player tag from existing player pool if any
+        last_tag = get_last_playertag(con)
+        if last_tag is not None:
+            init_player_tag = last_tag
+    else:
+        init_player_tag = init_player_tag_manual
+
+    # retrive a battle from this player tag
     battle_log_res = cr_api_request(init_player_tag, 'battle_log')
     sleep(SLEEP_TIME)
 
     if battle_log_res.get('statusCode') == 200 and len(battle_log_res.get('body')) > 0:
         # a list of dict, where each dict is a battle
         battle_log = battle_log_res.get('body')
-
-        # insert all battles for current player
-        for battle in battle_log:
-            insert_battle(con, battle)
-
-        # randomly pick an opponent from one of the battles, then recurse
-        random_battle = battle_log[randrange(len(battle_log))]
-        opponents = random_battle.get('opponent')
-        random_opponent = opponents[randrange(len(opponents))]
-        tag = random_opponent.get('tag')
-        collect_data(con, tag)
-
+        # randomly pick a battle
+        init_battle = battle_log[randrange(len(battle_log))]
     else:
-        # current player has no battle log available
-        # try a random clanmate
-        clanmate_tags = get_clanmate_tags(init_player_tag)
-        sleep(SLEEP_TIME)
+        email_admin(
+            400, 'Cannot get battle log from initial player; need to manually specify one; data collection terminated.')
+        exit(1)
 
-        if clanmate_tags is not None and len(clanmate_tags) > 0:
-            # player has clanmates
-            # first insert battlelogs for all clanmates
-            for tag in clanmate_tags:
-                battle_log_res = cr_api_request(tag, 'battle_log')
-                sleep(SLEEP_TIME)
+    # data collection process starts
 
-                if battle_log_res.get('statusCode') == 200 and len(battle_log_res.get('body')) > 0:
-                    battle_log = battle_log_res.get('body')
-                    for battle in battle_log:
-                        insert_battle(con, battle)
+    # initialize queue for level-order traversal
+    queue = deque()
+    queue.append(init_battle)
 
-            # then randomly pick a clanmate and recurse
-            random_tag = clanmate_tags[randrange(len(clanmate_tags))]
-            collect_data(con, random_tag)
-        else:
-            # player has no clanmates availble
-            # randomly pick a player from table battleParticipant
-            random_tag = get_random_playertag(con)
-            if random_tag is not None:
-                # recurse on random playerTag taken from existing player pool
-                collect_data(con, random_tag)
+    while len(queue) > 0:
+        # remove front of queue and insert into DB
+        curr_battle = queue.popleft()
+        insert_battle(con, curr_battle)
+
+        print('inserted')
+
+        # produce a list of players
+
+        # player tags of battle participants
+        team = curr_battle.get('team') or []
+        opponent = curr_battle.get('opponent') or []
+        participants = team + opponent
+
+        # # clan tags of battle participants if any
+        # player_clan_map = {}
+        # for player in participants:
+        #     clan = player.get('clan')
+        #     try:
+        #         clan_tag = clan.get('tag')
+        #     except AttributeError:
+        #         clan_tag = None
+        #     player_clan_map[player.get('tag')] = clan_tag
+
+        # # get tags of all members of each clan
+        # all_player_tags = []
+        # for player_tag in player_clan_map:
+        #     clan_tag = player_clan_map.get(player_tag)
+        #     if clan_tag is None:
+        #         # not part of a clan, append itself
+        #         all_player_tags.append(player_tag)
+        #     else:
+        #         clan_members_res = cr_api_request(clan_tag, 'clan_members')
+        #         sleep(SLEEP_TIME)
+
+        #         if clan_members_res.get('statusCode') != 200:  # request failed
+        #             # failed to get clan members, append itself
+        #             all_player_tags.append(player_tag)
+        #         else:
+        #             clan = clan_members_res.get('body')
+        #             members = clan.get('items')
+        #             for member in members:
+        #                 all_player_tags.append(member.get('tag'))
+
+        all_player_tags = [player.get('tag') for player in participants]  # do not process clans for now to speed up
+
+        print('all player tags:', len(all_player_tags))
+
+        # get battle logs of all players, then enqueue
+        for player_tag in all_player_tags:
+            # get battle log of current player
+            battle_log_res = cr_api_request(player_tag, 'battle_log')
+            sleep(SLEEP_TIME)
+
+            if battle_log_res.get('statusCode') == 200 and len(battle_log_res.get('body')) > 0:
+                # a list of dict, where each dict is a battle
+                battle_log = battle_log_res.get('body')
+
+                # enqueue all battles for current player
+                for battle in battle_log:
+                    queue.append(battle)
             else:
-                # last resort: select randomly from US leaderboard
-                rankings_res = cr_api_request('57000249', 'player_rankings')
-                sleep(SLEEP_TIME)
-                if rankings_res.get('statusCode') == 200:
-                    players = rankings_res.get('body').get('items')
-                    random_player = players[randrange(len(players))]
-                    tag = random_player.get('tag')
-                    collect_data(con, tag)
-                else:
-                    email_admin(
-                        500, 'Critical failure: Cannot retrive player rankings; data collection terminated.')
-                    exit(1)
+                continue
 
-
-def initiate_data_collection() -> None:
-    """
-    The master function to use for initiating the data collection process.
-    """
-    db = DBConnection()
-    con = db.get_con()
-
-    init_player_tag = '#9YJUPU9LY'  # default to myself
-
-    # use random player tag from existing player pool if any
-    random_tag = get_random_playertag(con)
-    if random_tag is not None:
-        init_player_tag = random_tag
-
-    collect_data(con, init_player_tag)
+        print('while curr iter done')
