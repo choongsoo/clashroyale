@@ -11,7 +11,7 @@ from extensions.connect_db import DBConnection
 from helpers import email_admin, cr_api_request
 
 
-SLEEP_TIME = 0.3
+SLEEP_TIME = 0.1
 
 
 def psql_insert(con, table: str, insert_tuple: tuple) -> None:
