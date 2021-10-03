@@ -234,6 +234,51 @@ def get_last_playertag(con) -> str:
                 400, 'ERROR: Get random playerTag: {}.'.format(str(e).strip()))
 
 
+def get_last_playertag(con) -> str:
+    """
+    A function that selects the last player tag within table BattleParticipant.
+    :return: Either a string or None.
+    """
+    with con.cursor() as cur:
+        try:
+            cur.execute("""
+                SELECT playerTag
+                FROM BattleParticipant
+                WHERE battleId = (
+                    SELECT battleId
+                    FROM BattleInfo
+                    ORDER BY battleTime DESC
+                    LIMIT 1
+                )
+                LIMIT 1;
+            """)
+            res = cur.fetchone()  # a tuple
+            if res is not None:
+                return res[0]
+            else:
+                return None
+        except psycopg2.Error as e:
+            email_admin(
+                400, 'ERROR: Get last playerTag: {}.'.format(str(e).strip()))
+
+
+def get_random_playertags(con, n=1000) -> str:
+    """
+    A function that selects random player tags within table BattleParticipant.
+    :return: Either a string or None.
+    """
+    with con.cursor() as cur:
+        try:
+            cur.execute("""
+                SELECT playerTag FROM BattleParticipant WHERE RANDOM() < 0.01 LIMIT %s;
+            """, (n,))
+            res = cur.fetchall()  # a list of tuples
+            return res  # if no result, []
+        except psycopg2.Error as e:
+            email_admin(
+                400, 'ERROR: Get random playerTags: {}.'.format(str(e).strip()))
+
+
 def collect_data(init_player_tag_manual=None) -> None:
     """
     Collect data recursively using the technique called crawling.
@@ -279,10 +324,17 @@ def collect_data(init_player_tag_manual=None) -> None:
     queue = deque()
     queue.append(init_battle)
 
+    i = 0  # counts number of inserts
+
     while len(queue) > 0:
+        # stop level order traversal after DB has been populated enough
+        if i >= 10000:
+            break
+
         # remove front of queue and insert into DB
         curr_battle = queue.popleft()
         insert_battle(con, curr_battle)
+        i += 1
 
         print('inserted')
 
@@ -323,7 +375,8 @@ def collect_data(init_player_tag_manual=None) -> None:
         #             for member in members:
         #                 all_player_tags.append(member.get('tag'))
 
-        all_player_tags = [player.get('tag') for player in participants]  # do not process clans for now to speed up
+        # do not process clans for now to speed up
+        all_player_tags = [player.get('tag') for player in participants]
 
         print('all player tags:', len(all_player_tags))
 
@@ -344,3 +397,32 @@ def collect_data(init_player_tag_manual=None) -> None:
                 continue
 
         print('while curr iter done')
+
+    # after DB has been populated enough
+    # first finish inserting all battles currently in queue
+    print('exited while')
+
+    while len(queue) > 0:
+        insert_battle(con, queue.popleft())
+
+    print('queue emptied')
+
+    # repeat random sampling from existing player pool
+    while True:
+        # a list of 1000 length-1 tuples
+        random_playertags = get_random_playertags(con)
+
+        print('got random player tags')
+
+        # for each player tag, insert all its battles
+        for tp in random_playertags:
+            tag = tp[0]
+
+            battle_log_res = cr_api_request(tag, 'battle_log')
+            sleep(SLEEP_TIME)
+
+            if battle_log_res.get('statusCode') == 200 and len(battle_log_res.get('body')) > 0:
+                # a list of dict, where each dict is a battle
+                battle_log = battle_log_res.get('body')
+                for battle in battle_log:
+                    insert_battle(con, battle)
