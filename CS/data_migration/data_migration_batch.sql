@@ -1,96 +1,96 @@
--- ==========================================
--- Resets new db tables
--- ==========================================
-DROP TABLE IF EXISTS BattleInfo CASCADE;
-CREATE TABLE BattleInfo (
-  battleId           char(64) NOT NULL,  -- made via sha256()
-  battleTime         timestamp, 
-  type               varchar(30), 
-  isLadderTournament boolean, 
-  arenaId            int4, 
-  arena              varchar(30), 
-  gameModeId         int4, 
-  gameMode           varchar(50), 
-  deckSelection      varchar(30), 
-  PRIMARY KEY (battleId));
+-- -- ==========================================
+-- -- Resets new db tables
+-- -- ==========================================
+-- DROP TABLE IF EXISTS BattleInfo CASCADE;
+-- CREATE TABLE BattleInfo (
+--   battleId           char(64) NOT NULL,  -- made via sha256()
+--   battleTime         timestamp, 
+--   type               varchar(30), 
+--   isLadderTournament boolean, 
+--   arenaId            int4, 
+--   arena              varchar(30), 
+--   gameModeId         int4, 
+--   gameMode           varchar(50), 
+--   deckSelection      varchar(30), 
+--   PRIMARY KEY (battleId));
 
 
-DROP TABLE IF EXISTS BattleParticipant CASCADE;
-CREATE TABLE BattleParticipant (
-  battleId    char(64) NOT NULL, 
-  playerTag   varchar(20) NOT NULL, 
-  team        boolean, 
-  PRIMARY KEY (battleId, playerTag),
-  FOREIGN KEY (battleId) REFERENCES BattleInfo (battleId));
+-- DROP TABLE IF EXISTS BattleParticipant CASCADE;
+-- CREATE TABLE BattleParticipant (
+--   battleId    char(64) NOT NULL, 
+--   playerTag   varchar(20) NOT NULL, 
+--   team        boolean, 
+--   PRIMARY KEY (battleId, playerTag),
+--   FOREIGN KEY (battleId) REFERENCES BattleInfo (battleId));
 
 
-DROP TABLE IF EXISTS BattleDeck;
-CREATE TABLE BattleDeck (
-  battleId    char(64) NOT NULL, 
-  playerTag   varchar(20) NOT NULL, 
-  card        varchar(30) NOT NULL, 
-  cardLevel   int4, 
-  PRIMARY KEY (battleId, playerTag, card),
-  FOREIGN KEY (battleId, playerTag) REFERENCES BattleParticipant (battleId, playerTag));
+-- DROP TABLE IF EXISTS BattleDeck;
+-- CREATE TABLE BattleDeck (
+--   battleId    char(64) NOT NULL, 
+--   playerTag   varchar(20) NOT NULL, 
+--   card        varchar(30) NOT NULL, 
+--   cardLevel   int4, 
+--   PRIMARY KEY (battleId, playerTag, card),
+--   FOREIGN KEY (battleId, playerTag) REFERENCES BattleParticipant (battleId, playerTag));
 
 
-DROP TABLE IF EXISTS BattleData;
-CREATE TABLE BattleData (
-  battleId                char(64) NOT NULL, 
-  playerTag               varchar(20) NOT NULL, 
-  clanTag                 varchar(20), 
-  startingTrophies        int4, 
-  trophyChange            int4, 
-  crowns                  int4, 
-  princessTower1HitPoints int4, 
-  princessTower2HitPoints int4, 
-  kingTowerHitPoints      int4, 
-  boatBattleSide          char(8), 
-  boatBattleWon           boolean, 
-  newBoatTowersDestroyed  int4, 
-  prevBoatTowersDestroyed int4, 
-  remainingBoatTowers     int4, 
-  PRIMARY KEY (battleId, playerTag), 
-  FOREIGN KEY (battleId, playerTag) REFERENCES BattleParticipant (battleId, playerTag));
+-- DROP TABLE IF EXISTS BattleData;
+-- CREATE TABLE BattleData (
+--   battleId                char(64) NOT NULL, 
+--   playerTag               varchar(20) NOT NULL, 
+--   clanTag                 varchar(20), 
+--   startingTrophies        int4, 
+--   trophyChange            int4, 
+--   crowns                  int4, 
+--   princessTower1HitPoints int4, 
+--   princessTower2HitPoints int4, 
+--   kingTowerHitPoints      int4, 
+--   boatBattleSide          char(8), 
+--   boatBattleWon           boolean, 
+--   newBoatTowersDestroyed  int4, 
+--   prevBoatTowersDestroyed int4, 
+--   remainingBoatTowers     int4, 
+--   PRIMARY KEY (battleId, playerTag), 
+--   FOREIGN KEY (battleId, playerTag) REFERENCES BattleParticipant (battleId, playerTag));
 
 
-DROP TABLE IF EXISTS PlayerInfo;
-CREATE TABLE PlayerInfo (
-  playerTag             varchar(20) NOT NULL, 
-  name                  varchar(30) NOT NULL, 
-  expLevel              int4 NOT NULL, 
-  trophies              int4 NOT NULL, 
-  bestTrophies          int4 NOT NULL, 
-  wins                  int4 NOT NULL, 
-  losses                int4 NOT NULL, 
-  battleCount           int4 NOT NULL, 
-  threeCrownWins        int4 NOT NULL, 
-  challengeCardsWon     int4 NOT NULL, 
-  challengeMaxWins      int4 NOT NULL, 
-  tournamentCardsWon    int4 NOT NULL, 
-  tournamentBattleCount int4 NOT NULL, 
-  role                  varchar(30) NOT NULL, 
-  donations             int4 NOT NULL, 
-  donationsReceived     int4 NOT NULL, 
-  totalDonations        int4 NOT NULL, 
-  warDayWins            int4 NOT NULL, 
-  clanCardsCollected    int4 NOT NULL, 
-  clanTag               varchar(20), 
-  arena                 varchar(30) NOT NULL, 
-  PRIMARY KEY (playerTag));
+-- DROP TABLE IF EXISTS PlayerInfo;
+-- CREATE TABLE PlayerInfo (
+--   playerTag             varchar(20) NOT NULL, 
+--   name                  varchar(30) NOT NULL, 
+--   expLevel              int4 NOT NULL, 
+--   trophies              int4 NOT NULL, 
+--   bestTrophies          int4 NOT NULL, 
+--   wins                  int4 NOT NULL, 
+--   losses                int4 NOT NULL, 
+--   battleCount           int4 NOT NULL, 
+--   threeCrownWins        int4 NOT NULL, 
+--   challengeCardsWon     int4 NOT NULL, 
+--   challengeMaxWins      int4 NOT NULL, 
+--   tournamentCardsWon    int4 NOT NULL, 
+--   tournamentBattleCount int4 NOT NULL, 
+--   role                  varchar(30) NOT NULL, 
+--   donations             int4 NOT NULL, 
+--   donationsReceived     int4 NOT NULL, 
+--   totalDonations        int4 NOT NULL, 
+--   warDayWins            int4 NOT NULL, 
+--   clanCardsCollected    int4 NOT NULL, 
+--   clanTag               varchar(20), 
+--   arena                 varchar(30) NOT NULL, 
+--   PRIMARY KEY (playerTag));
 
 
--- ==========================================
--- Distribute original table into new tables within new DB 'clash'
--- ==========================================
--- First, sha256(id)
--- Note: clash(id) conveniently happens to be battleTime + (player tags in alphabetical order)
--- To create BattleInfo(battleId), simply perform sha256(clash(id)), then remove '\x'
-ALTER TABLE Clash
-ADD COLUMN idHash CHAR(64);
+-- -- ==========================================
+-- -- Distribute original table into new tables within new DB 'clash'
+-- -- ==========================================
+-- -- First, sha256(id)
+-- -- Note: clash(id) conveniently happens to be battleTime + (player tags in alphabetical order)
+-- -- To create BattleInfo(battleId), simply perform sha256(clash(id)), then remove '\x'
+-- ALTER TABLE Clash
+-- ADD COLUMN idHash CHAR(64);
 
-UPDATE Clash
-SET idHash = ENCODE(SHA256(id::BYTEA), 'hex');
+-- UPDATE Clash
+-- SET idHash = ENCODE(SHA256(id::BYTEA), 'hex');
 
 
 -- ==========================================
@@ -98,12 +98,14 @@ SET idHash = ENCODE(SHA256(id::BYTEA), 'hex');
 -- ==========================================
 DO $$
 DECLARE
-    batchSize INT := 1000000;  -- insert and commit 1 mil battles at a time
+    batchSize INT := 1000;  -- insert and commit 1000 battle at a time
     counter INT := 0;
 BEGIN
-    WHILE counter < 700 LOOP  -- ~650 mil battles
+    WHILE counter < 700000 LOOP  -- ~650 mil battles
     -- Note: predicate is originally (SELECT COUNT(*) FROM clash) > 0
     -- But it takes too long
+
+        BEGIN
 
         -- ==========================================
         -- Insert into BattleInfo
@@ -118,9 +120,13 @@ BEGIN
         -- Insert into BattleParticipant
         -- ==========================================
         INSERT INTO BattleParticipant (battleId, playerTag)
-        (SELECT idHash, leftTag FROM Clash ORDER BY idHash LIMIT batchSize)
+        (SELECT idHash, leftTag FROM Clash 
+        ORDER BY idHash 
+        LIMIT batchSize)
         UNION ALL
-        (SELECT idHash, rightTag FROM Clash ORDER BY idHash LIMIT batchSize);
+        (SELECT idHash, rightTag FROM Clash 
+        ORDER BY idHash 
+        LIMIT batchSize);
 
         -- ==========================================
         -- Insert into BattleDeck
@@ -212,13 +218,13 @@ BEGIN
         -- ==========================================
         INSERT INTO BattleData (battleId, playerTag, clanTag, startingTrophies, trophyChange, crowns)
         (SELECT idHash, leftTag, leftClanTag, leftStartingTrophies, leftTrophyChange, leftCrowns
-        FROM Clash
-        ORDER BY idHash
+        FROM Clash 
+        ORDER BY idHash 
         LIMIT batchSize)
         UNION ALL
         (SELECT idHash, rightTag, rightClanTag, rightStartingTrophies, rightTrophyChange, rightCrowns
-        FROM Clash
-        ORDER BY idHash
+        FROM Clash 
+        ORDER BY idHash 
         LIMIT batchSize);
 
         -- ==========================================
@@ -226,13 +232,35 @@ BEGIN
         -- ==========================================
         DELETE FROM Clash
         WHERE idHash in
-        (SELECT idHash FROM Clash ORDER BY idHash LIMIT batchSize);
+        (SELECT idHash FROM Clash 
+        ORDER BY idHash 
+        LIMIT batchSize);
+
 
         RAISE NOTICE 'Iteration % complete', counter;
 
-        COMMIT;  -- this is essential
-
         counter := counter + 1;
+
+        -- ==========================================
+        -- Error handling (just skip to next iteration)
+        -- ==========================================
+        EXCEPTION WHEN others THEN
+
+            RAISE NOTICE 'Exception raised at iteration %', counter;
+
+            -- essential, so that loop can advance
+            DELETE FROM Clash
+            WHERE idHash in
+            (SELECT idHash FROM Clash 
+            ORDER BY idHash 
+            LIMIT batchSize);
+
+            counter := counter + 1;
+            CONTINUE;
+
+        END;
+
+        COMMIT;  -- this is essential: commit when each loop iteration finishes
 
     END LOOP;
 END$$;
