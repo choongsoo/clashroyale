@@ -94,14 +94,23 @@
 
 
 -- ==========================================
+-- need to remove duplicate rows based on idHash
+-- ==========================================
+DELETE FROM Clash T1
+    USING   Clash T2
+WHERE T1.ctid < T2.ctid
+    AND T1.idHash  = T2.idHash;
+
+
+-- ==========================================
 -- Loop: insert in batches, so that DB can commit periodically
 -- ==========================================
 DO $$
 DECLARE
-    batchSize INT := 1000;  -- insert and commit 1000 battle at a time
+    batchSize INT := 1000000;  -- insert and commit 1 mil battle at a time
     counter INT := 0;
 BEGIN
-    WHILE counter < 700000 LOOP  -- ~650 mil battles
+    WHILE counter < 700 LOOP  -- ~650 mil battles
     -- Note: predicate is originally (SELECT COUNT(*) FROM clash) > 0
     -- But it takes too long
 
