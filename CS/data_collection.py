@@ -14,14 +14,19 @@ from helpers import email_admin, cr_api_request
 SLEEP_TIME = 0.05
 
 
-def psql_insert(con, table: str, insert_tuple: tuple) -> None:
+def psql_insert(con, table: str, insert_tuple: tuple, integrity_error_action: str = 'rollback',
+                primary_key: str = None, primary_key_value: str = None) -> None:
     """
     A helper function that does exactly what INSERT INTO does
     (when inserting into all columns).
     :param con: A psycopg2 connection object;
     :param table: Name of the table;
     :param insert_tuple: Values to insert - usually a single tuple,
-    but if bulk=True, a tuple of tuples.
+    but if bulk=True, a tuple of tuples;
+    :param integrity_error_action: 'rollback' (default) or 'update' (given a primary key);
+    this is useful for PlayerInfo insertions;
+    :param primary_key: Required only if integrity_error_action = 'update';
+    :param primary_key_value: The actual value of primary key (assumes it's a string)
     """
     # detect if this is a bulk insertion
     bulk = type(insert_tuple[0]) is tuple
@@ -41,14 +46,150 @@ def psql_insert(con, table: str, insert_tuple: tuple) -> None:
             else:
                 cur.executemany(insert_cmd, insert_tuple)
         except psycopg2.IntegrityError:
-            # if primary/foreign key constraint violation, roll back, do not email
-            con.rollback()
+            if integrity_error_action == 'rollback':
+                # by default, if primary/foreign key constraint violation, roll back, do not email
+                con.rollback()
+            elif integrity_error_action == 'update':
+                # perform an update instead - use primary key specified
+                # shortcut: delete row with primary key, then re-insert
+                delete_cmd = "DELETE FROM {} WHERE {} = '{}'".format(
+                    table, primary_key, primary_key_value)
+                cur.execute(delete_cmd)
+                psql_insert(con, table, insert_tuple,
+                            integrity_error_action, primary_key, primary_key_value)
         except psycopg2.Error as e:
             # email admin on all other errors
             email_admin(400, 'ERROR: Insertion: {}.'.format(str(e).strip()))
         else:
             # commit if successful
             con.commit()
+
+
+def insert_player_info(con, player_tag: str) -> None:
+    """
+    Inserts into table PlayerInfo given a player_tag. Requires API call.
+    :param con: A psycopg2 connection object;
+    :param player_tag: A string.
+    """
+    pass
+    player_info_res = cr_api_request(player_tag, 'player_info')
+    # sleep(SLEEP_TIME)
+
+    if player_info_res.get('statusCode') == 200 and len(player_info_res.get('body')) > 0:
+        player_info = player_info_res.get('body')  # a dictionary
+
+        # build insertion tuple by extracting every attribute for table PlayerInfo
+        playerTag = player_info.get('tag')
+        name = player_info.get('name')
+
+        clan = player_info.get('clan')
+        try:
+            clanTag = clan.get('tag')
+        except AttributeError:
+            clanTag = None
+
+        role = player_info.get('role')
+
+        arena = player_info.get('arena')
+        try:
+            arenaId = arena.get('id')
+            arenaName = arena.get('name')
+        except AttributeError:
+            arenaId = None
+            arenaName = None
+
+        trophies = player_info.get('trophies')
+        bestTrophies = player_info.get('bestTrophies')
+        donations = player_info.get('donations')
+        donationsReceived = player_info.get('donationsReceived')
+        totalDonations = player_info.get('totalDonations')
+
+        leagueStatistics = player_info.get('leagueStatistics')
+        if leagueStatistics is not None:
+            previousSeason = leagueStatistics.get('previousSeason')
+            try:
+                previousSeasonTrophies = previousSeason.get('trophies')
+                previousSeasonRank = previousSeason.get('rank')
+                previousSeasonBestTrophies = previousSeason.get('bestTrophies')
+                previousSeasonId = previousSeason.get('id')
+            except AttributeError:
+                previousSeasonTrophies = None
+                previousSeasonRank = None
+                previousSeasonBestTrophies = None
+                previousSeasonId = None
+
+            currentSeason = leagueStatistics.get('currentSeason')
+            try:
+                currentSeasonTrophies = currentSeason.get('trophies')
+                currentSeasonRank = currentSeason.get('rank')
+                currentSeasonBestTrophies = currentSeason.get('bestTrophies')
+                currentSeasonId = currentSeason.get('id')
+            except AttributeError:
+                currentSeasonTrophies = None
+                currentSeasonRank = None
+                currentSeasonBestTrophies = None
+                currentSeasonId = None
+
+            bestSeason = leagueStatistics.get('bestSeason')
+            try:
+                bestSeasonTrophies = bestSeason.get('trophies')
+                bestSeasonRank = bestSeason.get('rank')
+                bestSeasonBestTrophies = bestSeason.get('bestTrophies')
+                bestSeasonId = bestSeason.get('id')
+            except AttributeError:
+                bestSeasonTrophies = None
+                bestSeasonRank = None
+                bestSeasonBestTrophies = None
+                bestSeasonId = None
+        else:
+            previousSeasonTrophies = None
+            previousSeasonRank = None
+            previousSeasonBestTrophies = None
+            previousSeasonId = None
+            currentSeasonTrophies = None
+            currentSeasonRank = None
+            currentSeasonBestTrophies = None
+            currentSeasonId = None
+            bestSeasonTrophies = None
+            bestSeasonRank = None
+            bestSeasonBestTrophies = None
+            bestSeasonId = None
+
+        currentFavouriteCard = player_info.get('currentFavouriteCard')
+        try:
+            currentFavouriteCardName = currentFavouriteCard.get('name')
+        except AttributeError:
+            currentFavouriteCardName = None
+
+        expLevel = player_info.get('expLevel')
+        expPoints = player_info.get('expPoints')
+        wins = player_info.get('wins')
+        losses = player_info.get('losses')
+        battleCount = player_info.get('battleCount')
+        threeCrownWins = player_info.get('threeCrownWins')
+        challengeCardsWon = player_info.get('challengeCardsWon')
+        challengeMaxWins = player_info.get('challengeMaxWins')
+        tournamentCardsWon = player_info.get('tournamentCardsWon')
+        tournamentBattleCount = player_info.get('tournamentBattleCount')
+        warDayWins = player_info.get('warDayWins')
+        clanCardsCollected = player_info.get('clanCardsCollected')
+        starPoints = player_info.get('starPoints')
+    else:
+        # if fails, ignore - this is not a critical part of data collection
+        pass
+
+    # the insertion tuple
+    insertion_tuple = (playerTag, name, clanTag, role, arenaId, arenaName, trophies, bestTrophies,
+                       donations, donationsReceived, totalDonations,
+                       previousSeasonTrophies, previousSeasonRank, previousSeasonBestTrophies, previousSeasonId,
+                       currentSeasonTrophies, currentSeasonRank, currentSeasonBestTrophies, currentSeasonId,
+                       bestSeasonTrophies, bestSeasonRank, bestSeasonBestTrophies, bestSeasonId,
+                       currentFavouriteCardName, expLevel, expPoints, wins, losses, battleCount,
+                       threeCrownWins, challengeCardsWon, challengeMaxWins, tournamentCardsWon,
+                       tournamentBattleCount, warDayWins, clanCardsCollected, starPoints)
+
+    psql_insert(con, 'PlayerInfo', insertion_tuple, integrity_error_action='update',
+                primary_key='playerTag', primary_key_value=playerTag)
 
 
 def insert_battle(con, data: dict) -> None:
@@ -204,6 +345,12 @@ def insert_battle(con, data: dict) -> None:
     # bulk insertion
     insertion_tuple = df_sub.to_records(index=False).tolist()
     psql_insert(con, 'BattleDeck', insertion_tuple)
+
+    # ------------------------------------------
+    # insert/update table PlayerInfo for all player tags involved
+    # ------------------------------------------
+    for tag in tags:
+        insert_player_info(con, tag)
 
 
 def get_last_playertag(con) -> str:
@@ -404,6 +551,7 @@ def collect_data(init_player_tag_manual=None) -> None:
 
     while len(queue) > 0:
         insert_battle(con, queue.popleft())
+        sleep(SLEEP_TIME)
 
     print('queue emptied')
 

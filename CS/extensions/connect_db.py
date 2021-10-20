@@ -8,10 +8,10 @@ class DBConnection:
     # the constructor
     def __init__(self):
         # some arguments for psycopg2.connect()
-        DBNAME = 'szhan18_clash'
-        USER = 'szhan18'
-        HOST = 'ada.hpc.stlawu.edu'
-        PASSWORD_FILE = '{}/../credentials/psql-pass-ada.txt'.format(dirname(__file__))
+        DBNAME = 'clash'
+        USER = 'clashuser'
+        HOST = '10.32.95.90'
+        PASSWORD_FILE = '{}/../credentials/psql-pass.txt'.format(dirname(__file__))
 
         # try to open password file to connect to DB
         try:
