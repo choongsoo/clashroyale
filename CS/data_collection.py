@@ -174,22 +174,22 @@ def insert_player_info(con, player_tag: str) -> None:
         warDayWins = player_info.get('warDayWins')
         clanCardsCollected = player_info.get('clanCardsCollected')
         starPoints = player_info.get('starPoints')
+
+        # the insertion tuple
+        insertion_tuple = (playerTag, name, clanTag, role, arenaId, arenaName, trophies, bestTrophies,
+                           donations, donationsReceived, totalDonations,
+                           previousSeasonTrophies, previousSeasonRank, previousSeasonBestTrophies, previousSeasonId,
+                           currentSeasonTrophies, currentSeasonRank, currentSeasonBestTrophies, currentSeasonId,
+                           bestSeasonTrophies, bestSeasonRank, bestSeasonBestTrophies, bestSeasonId,
+                           currentFavouriteCardName, expLevel, expPoints, wins, losses, battleCount,
+                           threeCrownWins, challengeCardsWon, challengeMaxWins, tournamentCardsWon,
+                           tournamentBattleCount, warDayWins, clanCardsCollected, starPoints)
+
+        psql_insert(con, 'PlayerInfo', insertion_tuple, integrity_error_action='update',
+                    primary_key='playerTag', primary_key_value=playerTag)
     else:
         # if fails, ignore - this is not a critical part of data collection
         pass
-
-    # the insertion tuple
-    insertion_tuple = (playerTag, name, clanTag, role, arenaId, arenaName, trophies, bestTrophies,
-                       donations, donationsReceived, totalDonations,
-                       previousSeasonTrophies, previousSeasonRank, previousSeasonBestTrophies, previousSeasonId,
-                       currentSeasonTrophies, currentSeasonRank, currentSeasonBestTrophies, currentSeasonId,
-                       bestSeasonTrophies, bestSeasonRank, bestSeasonBestTrophies, bestSeasonId,
-                       currentFavouriteCardName, expLevel, expPoints, wins, losses, battleCount,
-                       threeCrownWins, challengeCardsWon, challengeMaxWins, tournamentCardsWon,
-                       tournamentBattleCount, warDayWins, clanCardsCollected, starPoints)
-
-    psql_insert(con, 'PlayerInfo', insertion_tuple, integrity_error_action='update',
-                primary_key='playerTag', primary_key_value=playerTag)
 
 
 def insert_battle(con, data: dict) -> None:
