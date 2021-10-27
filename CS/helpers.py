@@ -68,7 +68,13 @@ def cr_api_request(tag: str, action: str, i: int = 0) -> dict:
         return {'statusCode': 500, 'body': {'message': message}}
 
     status_code = response.status_code
-    res = response.json()
+
+    try:
+        res = response.json()
+    except:
+        email_admin(
+            400, "response.json() failed, tag = {}, action = {}".format(tag, action))
+        return {'statusCode': 400, 'body': {}}
 
     # handle error responses
     if status_code == 200:
