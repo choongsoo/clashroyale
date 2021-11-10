@@ -1,7 +1,9 @@
+import sys
 import requests
 import json
 import smtplib
 import ssl
+from datetime import datetime
 from urllib.parse import quote_plus
 from time import sleep
 from os import environ
@@ -10,7 +12,30 @@ from os.path import dirname
 
 # A collection of globally-shared helper functions
 
+def init_log():
+    """
+    Open (create if does not exist) a log file named data_collection.log;
+    Erase existing content if any;
+    Set standard output to log file.
+    """
+    open("data_collection.log", "w").close()  # erase all content
+    log_file = open("data_collection.log", "w")
+    sys.stdout = log_file
+
+
+def log(message):
+    """
+    Logs message to data_collection.log in real time;
+    Assumes standard output is already set to log file.
+    """
+    print(datetime.now().strftime('%d/%m/%Y %H:%M:%S'), message, sep="\t\t")
+    sys.stdout.flush()  # update log file in real time
+
+
 def email_admin(status_code, message):
+    """
+    Send an alert email to admin; also save email content to log file.
+    """
     try:
         port = 465  # For SSL
         smtp_server = "smtp.gmail.com"
@@ -30,8 +55,13 @@ def email_admin(status_code, message):
             server.login(sender_email, password)
             server.sendmail(sender_email, receiver_email,
                             msg_template.format(status_code, message))
+
+        # whenever we email admin, also print to log file
+        log("email_admin()\n{}\n{}".format(status_code, message))
+
     except:
-        print("email_admin() failed, printing in console instead:", status_code, message)
+        log("email_admin() failed, logging instead: {}\n{}".format(
+            status_code, message))
 
 
 def cr_api_request(tag: str, action: str, i: int = 0) -> dict:
@@ -42,6 +72,8 @@ def cr_api_request(tag: str, action: str, i: int = 0) -> dict:
     :param i: An optional counter for potential recursive calls;
     :return: JSON response.
     """
+    log('Entered cr_api_request(), tag = {}, action = {}, i = {}'.format(tag, action, i))
+
     # prep
     url = 'https://api.clashroyale.com/v1/'
 
@@ -54,8 +86,7 @@ def cr_api_request(tag: str, action: str, i: int = 0) -> dict:
     elif action == 'player_rankings':
         url += 'locations/' + quote_plus(tag) + '/rankings/players'
     else:
-        print(
-            'action = [battle_log | player_info | clan_members | player_rankings]')
+        log('action = [battle_log | player_info | clan_members | player_rankings]')
         exit(1)
 
     token = environ.get('TOKEN')
@@ -82,6 +113,11 @@ def cr_api_request(tag: str, action: str, i: int = 0) -> dict:
     # handle error responses
     if status_code == 200:
         pass
+
+    elif status_code == 403:
+        # Fatal: IP address changed, need new key
+        email_admin(403, str(res))
+        exit(1)
 
     elif status_code == 429:
         # request throttled: amount of requests exceeded threshold defined for API token

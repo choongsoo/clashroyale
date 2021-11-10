@@ -8,7 +8,7 @@ from collections import deque
 
 import extensions.load_api_key
 from extensions.connect_db import DBConnection
-from helpers import email_admin, cr_api_request
+from helpers import log, email_admin, cr_api_request
 
 
 SLEEP_TIME = 0.05
@@ -28,6 +28,8 @@ def psql_insert(con, table: str, insert_tuple: tuple, integrity_error_action: st
     :param primary_key: Required only if integrity_error_action = 'update';
     :param primary_key_value: The actual value of primary key (assumes it's a string)
     """
+    log('Entered psql_insert()')
+
     # detect if this is a bulk insertion
     bulk = type(insert_tuple[0]) is tuple
     num_attr = len(insert_tuple) if not bulk else len(insert_tuple[0])
@@ -71,7 +73,8 @@ def insert_player_info(con, player_tag: str) -> None:
     :param con: A psycopg2 connection object;
     :param player_tag: A string.
     """
-    pass
+    log('Entered insert_player_info(), player_tag = {}'.format(player_tag))
+
     player_info_res = cr_api_request(player_tag, 'player_info')
     # sleep(SLEEP_TIME)
 
@@ -187,8 +190,12 @@ def insert_player_info(con, player_tag: str) -> None:
 
         psql_insert(con, 'PlayerInfo', insertion_tuple, integrity_error_action='update',
                     primary_key='playerTag', primary_key_value=playerTag)
+
+        log('insert_player_info() success, player_tag = {}'.format(player_tag))
+
     else:
         # if fails, ignore - this is not a critical part of data collection
+        log('Did not insert player info')
         pass
 
 
@@ -199,6 +206,8 @@ def insert_battle(con, data: dict) -> None:
     :param data: A dictionary (subset) taken directly from a battle_log request.
     The data contains information for exactly one battle.
     """
+    log('Entered insert_battle()')
+
     # ------------------------------------------
     # generate battleId
     # ------------------------------------------
@@ -352,33 +361,7 @@ def insert_battle(con, data: dict) -> None:
     for tag in tags:
         insert_player_info(con, tag)
 
-
-def get_last_playertag(con) -> str:
-    """
-    A function that selects the last player tag within table BattleParticipant.
-    :return: Either a string or None.
-    """
-    with con.cursor() as cur:
-        try:
-            cur.execute("""
-                SELECT playerTag
-                FROM BattleParticipant
-                WHERE battleId = (
-                    SELECT battleId
-                    FROM BattleInfo
-                    ORDER BY battleTime DESC
-                    LIMIT 1
-                )
-                LIMIT 1;
-            """)
-            res = cur.fetchone()  # a tuple
-            if res is not None:
-                return res[0]
-            else:
-                return None
-        except psycopg2.Error as e:
-            email_admin(
-                400, 'ERROR: Get random playerTag: {}.'.format(str(e).strip()))
+    log('insert_battle() success')
 
 
 def get_last_playertag(con) -> str:
@@ -386,6 +369,8 @@ def get_last_playertag(con) -> str:
     A function that selects the last player tag within table BattleParticipant.
     :return: Either a string or None.
     """
+    log('Entered get_last_playertag()')
+
     with con.cursor() as cur:
         try:
             cur.execute("""
@@ -414,6 +399,8 @@ def get_random_playertags(con, n=1000) -> str:
     A function that selects random player tags within table BattleParticipant.
     :return: Either a string or None.
     """
+    log('Entered get_random_playertags()')
+
     with con.cursor() as cur:
         try:
             cur.execute("""
@@ -451,6 +438,8 @@ def collect_data(init_player_tag_manual=None) -> None:
     else:
         init_player_tag = init_player_tag_manual
 
+    log('collect_data() started with player tag: {}'.format(init_player_tag))
+
     # retrive a battle from this player tag
     battle_log_res = cr_api_request(init_player_tag, 'battle_log')
     sleep(SLEEP_TIME)
@@ -475,7 +464,7 @@ def collect_data(init_player_tag_manual=None) -> None:
 
     while len(queue) > 0:
         # stop level order traversal after DB has been populated enough
-        if i >= 10000:
+        if i >= 5:
             break
 
         # remove front of queue and insert into DB
@@ -483,7 +472,7 @@ def collect_data(init_player_tag_manual=None) -> None:
         insert_battle(con, curr_battle)
         i += 1
 
-        print('inserted')
+        log('Inserted queue front to DB')
 
         # produce a list of players
 
@@ -525,7 +514,7 @@ def collect_data(init_player_tag_manual=None) -> None:
         # do not process clans for now to speed up
         all_player_tags = [player.get('tag') for player in participants]
 
-        print('all player tags:', len(all_player_tags))
+        log('All player tags: {}'.format(len(all_player_tags)))
 
         # get battle logs of all players, then enqueue
         for player_tag in all_player_tags:
@@ -543,34 +532,50 @@ def collect_data(init_player_tag_manual=None) -> None:
             else:
                 continue
 
-        print('while curr iter done')
+        log('while() curr iter done')
 
     # after DB has been populated enough
     # first finish inserting all battles currently in queue
-    print('exited while')
+    log('Exited while() - BFS')
 
     while len(queue) > 0:
         insert_battle(con, queue.popleft())
         sleep(SLEEP_TIME)
 
-    print('queue emptied')
+    log('Queue emptied')
 
     # repeat random sampling from existing player pool
     while True:
+        log('Entered while-true')
+
         # a list of 1000 length-1 tuples
         random_playertags = get_random_playertags(con)
 
-        print('got random player tags')
+        log('Got random player tags')
 
         # for each player tag, insert all its battles
         for tp in random_playertags:
+            log('Entered for-each-random-player-tag')
+
             tag = tp[0]
+
+            log('Curr random player tag = {}'.format(tag))
 
             battle_log_res = cr_api_request(tag, 'battle_log')
             sleep(SLEEP_TIME)
 
+            log('Got battle log response for tag: {}'.format(tag))
+
             if battle_log_res.get('statusCode') == 200 and len(battle_log_res.get('body')) > 0:
+                log('Valid battle_log_res')
+
                 # a list of dict, where each dict is a battle
                 battle_log = battle_log_res.get('body')
+
+                log('Battle log for player tag {}:\n{}'.format(tag, str(battle_log)))
+
+                log('Start insertion for-loop')
+
                 for battle in battle_log:
                     insert_battle(con, battle)
+                    log('Inserted battle:\n{}'.format(str(battle)))
