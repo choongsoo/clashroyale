@@ -17,3 +17,6 @@
 
 # log file
 **/*.log
+
+# R
+**/.Rhistory

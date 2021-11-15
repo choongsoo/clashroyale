@@ -1,0 +1,114 @@
+---
+title: "Basic Model"
+author: "Tom Zhang"
+date: "11/13/2021"
+output: html_document
+---
+
+## Imports
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readr)
+
+clash <- read_csv("sample/clash_sample_500k.csv", 
+    col_types = cols(battleid = col_character(), 
+        playertag = col_character(), battletime = col_datetime(format = "%Y-%m-%d %H:%M:%S"), 
+        type = col_character(), isladdertournament = col_logical(), 
+        arenaid = col_number(), arena = col_character(), 
+        gamemodeid = col_number(), gamemode = col_character(), 
+        deckselection = col_character(), 
+        team = col_logical(), card = col_character(), 
+        cardlevel = col_number(), clantag = col_character(), 
+        startingtrophies = col_number(), 
+        trophychange = col_number(), crowns = col_number(), 
+        princesstower1hitpoints = col_number(), 
+        princesstower2hitpoints = col_number(), 
+        kingtowerhitpoints = col_number(), 
+        boatbattleside = col_character(), 
+        boatbattlewon = col_logical(), newboattowersdestroyed = col_number(), 
+        prevboattowersdestroyed = col_number(), 
+        remainingboattowers = col_number()))
+```
+
+## Subset
+
+```{r}
+clash <-
+clash %>%
+  slice(1:16004)  # use a small subset first: ~ 2000 decks
+```
+
+## Data Wrangling
+
+```{r}
+# a matrix of card indicators
+x <- model.matrix(~0 + card + cardlevel, model.frame(~ ., clash, na.action=na.pass))
+
+# clean up col names
+colnames(x) <- str_remove_all(colnames(x), "card")
+colnames(x) <- str_replace_all(colnames(x), " ", "_")
+colnames(x) <- str_replace_all(colnames(x), "-", "_")
+
+# save a copy of just card indicators
+card_indicators <- x[, -ncol(x)]
+
+# ignore levels for now
+
+# # transform card levels into the same structure of card indicators
+# card_levels = sweep(x[,-ncol(x)], MARGIN = 1, STATS = x[,ncol(x)], FUN = "*")
+# 
+# # make col names for card levels
+# colnames(card_levels) = paste(colnames(card_levels),"_Level",sep = "")
+
+# create names for all card and card interaction terms to be used later
+interactions <- labels(terms(~ .^2, data = x[1:10, -ncol(x)]))
+
+rm(x)  # free up memory
+
+# put all columns together
+cr <-
+  # cbind(card_indicators, card_levels) %>%
+  card_indicators %>%
+  as_tibble() %>%
+  mutate(battleid = clash$battleid,
+         playertag = clash$playertag,
+         battlewon = clash$trophychange) %>%
+  group_by(battleid, playertag) %>%
+  summarize_if(is.numeric, sum) %>%
+  ungroup() %>%
+  mutate(battlewon = if_else(battlewon >= 0, 1, 0))
+
+rm(clash)  # free up memory
+rm(card_indicators)
+
+cr
+```
+
+## Build Formula
+
+```{r}
+# formula: battlewon ~ cards + card interactions
+f <- as.formula(paste("battlewon ~", paste(interactions, collapse = " + ")))
+```
+
+## Fit Model
+
+```{r}
+t1 <- Sys.time()
+
+mod_basic_logistic <- glm(f, data = cr, family = "binomial")
+
+t2 <- Sys.time()
+time_elapsed <- t2 - t1
+print(paste("Time elapsed fitting model:", time_elapsed))
+
+summary(mod_basic_logistic)
+```
+
+
+
+
+
+
+
