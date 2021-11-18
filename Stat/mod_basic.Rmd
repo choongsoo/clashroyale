@@ -9,7 +9,7 @@ output: html_document
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
-library(readr)
+library(broom)
 
 clash <- read_csv("sample/clash_sample_500k.csv", 
     col_types = cols(battleid = col_character(), 
@@ -101,14 +101,32 @@ mod_basic_logistic <- glm(f, data = cr, family = "binomial")
 
 t2 <- Sys.time()
 time_elapsed <- t2 - t1
-print(paste("Time elapsed fitting model:", time_elapsed))
-
-summary(mod_basic_logistic)
+print(paste("Time elapsed fitting model (min):", time_elapsed))
 ```
 
+## Coefficients
 
+Get top 200 interaction terms with positive slopes.
 
+```{r}
+df_mod <- tidy(mod)  # a data frame of model coefficients
 
+df_coef_200 <-
+  df_mod %>%
+    filter(str_detect(term, ":")) %>%
+    filter(estimate > 0) %>%
+    arrange(desc(estimate)) %>%
+    slice(1:200)
 
+interactions_200 <- df_coef_200$term  # a vector of 200 interaction terms
+```
 
+```{r}
+# save interactions_200
+write(interactions_200, "interactions_200.txt")
+```
 
+## Network
+
+Build an adjacency list that represents this graph (network).
+This will be done in Python.
