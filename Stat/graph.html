@@ -28,6 +28,24 @@
         }
 
         /**
+         * a helper function that changes outline color of current node and its adjacent nodes
+         */
+        function updateAdjacencyOutline(element, color, graph) {
+            const value = (color !== "none") ? `medium solid ${color}` : "none";
+
+            // modify current element's outline
+            d3.select(element)
+                .attr("style", `outline: ${value};`);
+
+            // get a list of adjacent vertex id's and modify their outlines
+            const adjList = graph[element.id];
+            adjList.forEach(id => {
+                d3.select(document.querySelector(`#${id}`))
+                    .attr("style", `outline: ${value};`);
+            });
+        }
+
+        /**
          * a function that produces an svg as an interactive graph
          */
         async function constructGraph() {
@@ -35,23 +53,24 @@
             const cardsResp = await fetch("cards.json");
             const cardsJSON = await cardsResp.json();
             const cardsArray = cardsJSON.items.map(card => {
-                let name = card.name;
-                name = name.replaceAll(" ", "_");
-                name = name.replaceAll("-", "_");
+                let id = card.name;
+                id = id.replaceAll(" ", "_");
+                id = id.replaceAll("-", "_");
                 const obj = {};
-                obj[name] = card.iconUrls.medium;
+                obj[id] = { name: card.name, url: card.iconUrls.medium };
                 return obj;
             });
             const allCards = cardsArray.reduce(((r, c) => Object.assign(r, c)), {});
 
             // read in graph json
-            const graphResp = await fetch("graph.json");
+            const graphResp = await fetch("graph.json?0");
             const graph = await graphResp.json();
 
             // transform graph data into D3-compliant format
             const vertices = Object.keys(graph),
                 nodes = vertices.map(d => {
-                    return { name: d, url: allCards[d], group: 1 }
+                    const card = allCards[d];
+                    return { id: d, name: card.name, url: card.url, group: 1 };
                 }),
                 links = d3.merge(vertices.map(source => {
                     return graph[source].map(target => {
@@ -97,12 +116,22 @@
                 .selectAll("image")
                 .data(nodes)
                 .join("image")
+                .attr("id", d => d.id)
                 .attr("xlink:href", d => d.url)
                 .attr("x", imgX)
                 .attr("y", imgY)
                 .attr("width", imgWidth)
                 .attr("height", imgHeight)
                 .call(drag(simulation));
+
+            // add hover effects to nodes
+            node
+                .on('mouseover', function (d, i) {
+                    updateAdjacencyOutline(this, "red", graph);
+                })
+                .on('mouseout', function (d, i) {
+                    updateAdjacencyOutline(this, "none", graph);
+                });
 
             // animation logic
             function ticked() {

@@ -12,6 +12,8 @@ graph = dict()
 for pair in interactions:
     card1, card2 = pair.split(":")
 
+    # FIXME: card Fire Spirits has been changed to Fire Spirit - change old data
+
     if card1 not in graph:
         graph[card1] = []
     if card2 not in graph:

@@ -1,1 +1,586 @@
-{"Archers": ["Royal_Delivery", "Giant_Snowball", "Guards", "Electro_Giant", "Clone", "Musketeer", "Poison", "Bowler", "Executioner", "Firecracker", "Skeleton_Army", "Rascals", "Ice_Wizard", "Mortar", "Dart_Goblin", "Mirror", "Goblins", "Cannon_Cart", "Hunter", "Bomb_Tower", "Dark_Prince", "X_Bow", "Cannon", "Wizard", "Princess", "Mother_Witch", "Baby_Dragon", "Golem", "Lightning", "Goblin_Hut", "Magic_Archer", "Skeletons", "Night_Witch", "Ram_Rider", "Electro_Dragon", "Zap", "Furnace", "Fireball", "Balloon", "Three_Musketeers", "Rocket", "Wall_Breakers", "The_Log", "Inferno_Tower", "Fire_Spirits"], "Royal_Delivery": ["Archers", "Baby_Dragon", "Bandit"], "Giant_Snowball": ["Archers", "Barbarian_Barrel", "Bomb_Tower", "Arrows"], "Guards": ["Archers"], "Bomb_Tower": ["Firecracker", "Graveyard", "Archers", "Goblin_Barrel", "Balloon", "Giant_Snowball", "Elixir_Collector", "Arrows", "Electro_Wizard", "Fireball"], "Firecracker": ["Bomb_Tower", "Archers", "Ice_Spirit", "Ice_Wizard", "Dart_Goblin", "Barbarians", "Bandit", "Magic_Archer"], "Electro_Giant": ["Archers", "Barbarians", "Cannon_Cart"], "Barbarians": ["Bats", "Tesla", "Three_Musketeers", "Skeletons", "Battle_Ram", "Electro_Giant", "Furnace", "Wall_Breakers", "Lumberjack", "Firecracker", "Bomber", "Cannon", "Skeleton_Army", "Bandit", "Balloon", "Miner", "Ice_Wizard", "Sparky", "Mega_Minion", "Fire_Spirits", "Mother_Witch", "Goblin_Giant", "Elixir_Collector", "The_Log"], "Bats": ["Barbarians", "Cannon_Cart", "Elixir_Golem", "Bowler", "Goblin_Drill", "Dart_Goblin", "Three_Musketeers"], "Clone": ["Archers", "Royal_Ghost", "Mega_Minion", "Mother_Witch"], "Musketeer": ["Archers", "Dart_Goblin"], "Graveyard": ["Bomb_Tower", "Dart_Goblin", "Dark_Prince", "Freeze"], "Dart_Goblin": ["Elixir_Collector", "Archers", "Battle_Ram", "Goblin_Hut", "Night_Witch", "Lava_Hound", "Graveyard", "Baby_Dragon", "Musketeer", "Electro_Wizard", "Firecracker", "Mirror", "Lumberjack", "Freeze", "Lightning", "Cannon", "Mortar", "Mega_Minion", "P.E.K.K.A", "Goblin_Gang", "Bats", "Goblin_Drill", "Barbarian_Barrel", "Giant", "Knight", "Mother_Witch", "Bandit"], "Elixir_Collector": ["Dart_Goblin", "Bandit", "Bomb_Tower", "Furnace", "Battle_Ram", "Barbarians"], "Poison": ["Archers"], "Bowler": ["Archers", "Bats", "Freeze", "Golem"], "Executioner": ["Archers", "Ice_Golem", "Cannon_Cart", "Flying_Machine"], "Skeleton_Army": ["Archers", "Barbarians"], "Rascals": ["Archers", "Elite_Barbarians", "Fireball"], "Ice_Wizard": ["Archers", "Firecracker", "Barbarians", "Cannon"], "Barbarian_Barrel": ["Battle_Healer", "Giant_Snowball", "Goblin_Cage", "Spear_Goblins", "Fisherman", "Royal_Hogs", "Golem", "Skeletons", "Skeleton_Dragons", "Ram_Rider", "Ice_Spirit", "Fire_Spirits", "Dart_Goblin", "Goblin_Gang", "P.E.K.K.A"], "Battle_Healer": ["Barbarian_Barrel", "Electro_Dragon"], "Mortar": ["Archers", "Bandit", "Dart_Goblin"], "Tesla": ["Barbarians"], "Battle_Ram": ["Dart_Goblin", "Balloon", "Inferno_Tower", "Giant", "Barbarians", "Furnace", "Fire_Spirits", "Elixir_Collector", "Electro_Wizard", "Hog_Rider", "Barbarian_Hut", "Mega_Knight"], "Mirror": ["Archers", "Dart_Goblin"], "Goblin_Hut": ["Dart_Goblin", "Electro_Wizard", "Archers", "Furnace"], "Goblins": ["Archers", "Bomber"], "Cannon_Cart": ["Archers", "Bandit", "Bats", "Executioner", "Electro_Giant", "Arrows"], "Electro_Dragon": ["Elite_Barbarians", "Balloon", "Archers", "Fisherman", "Battle_Healer"], "Elite_Barbarians": ["Electro_Dragon", "Skeleton_Barrel", "Cannon", "Heal_Spirit", "Rascals", "Tombstone"], "Balloon": ["Electro_Dragon", "Battle_Ram", "Bomb_Tower", "Archers", "Skeleton_Dragons", "Goblin_Cage", "Barbarian_Hut", "Barbarians", "Cannon", "Mother_Witch"], "Hunter": ["Archers"], "Night_Witch": ["Dart_Goblin", "Archers"], "Arrows": ["Goblin_Giant", "Flying_Machine", "Skeleton_Dragons", "Earthquake", "Bomb_Tower", "Giant_Snowball", "X_Bow", "Cannon_Cart"], "Goblin_Giant": ["Arrows", "Bandit", "Barbarians"], "Bandit": ["Cannon_Cart", "Elixir_Collector", "Goblin_Giant", "Mortar", "Barbarians", "Firecracker", "Royal_Delivery", "Dart_Goblin"], "Electro_Wizard": ["Goblin_Hut", "Dart_Goblin", "Battle_Ram", "Bomb_Tower", "Heal_Spirit", "Cannon"], "Dark_Prince": ["Archers", "Graveyard"], "X_Bow": ["Archers", "Rage", "Arrows"], "Goblin_Barrel": ["Bomb_Tower", "Cannon"], "Baby_Dragon": ["Earthquake", "Archers", "Dart_Goblin", "Skeleton_Dragons", "Electro_Spirit", "Royal_Delivery"], "Earthquake": ["Baby_Dragon", "Arrows", "Fire_Spirits", "Fireball"], "Cannon": ["Archers", "Elite_Barbarians", "Dart_Goblin", "Goblin_Barrel", "Bomber", "Barbarians", "Fisherman", "Goblin_Gang", "Ice_Wizard", "Balloon", "Electro_Wizard", "Ice_Golem"], "Wizard": ["Archers"], "Princess": ["Archers"], "Mother_Witch": ["Archers", "Clone", "Barbarians", "Dart_Goblin", "Balloon"], "Lava_Hound": ["Dart_Goblin"], "Flying_Machine": ["Arrows", "Executioner"], "Ice_Spirit": ["Firecracker", "Barbarian_Barrel"], "Inferno_Tower": ["Battle_Ram", "Archers"], "Golem": ["Archers", "Barbarian_Barrel", "Fisherman", "Bowler", "P.E.K.K.A"], "Skeleton_Barrel": ["Elite_Barbarians"], "Giant": ["Battle_Ram", "Dart_Goblin"], "Three_Musketeers": ["Barbarians", "Fire_Spirits", "Archers", "Bats"], "Elixir_Golem": ["Bats", "Giant_Skeleton"], "Fire_Spirits": ["Three_Musketeers", "Battle_Ram", "Earthquake", "Barbarians", "Barbarian_Barrel", "Archers"], "Skeletons": ["Barbarians", "Archers", "Barbarian_Barrel"], "Lightning": ["Archers", "Dart_Goblin"], "Magic_Archer": ["Archers", "Furnace", "Firecracker"], "Ram_Rider": ["Archers", "Barbarian_Barrel"], "Fisherman": ["Electro_Dragon", "Barbarian_Barrel", "Cannon", "Golem"], "Ice_Golem": ["Executioner", "Cannon"], "Furnace": ["Battle_Ram", "Archers", "Elixir_Collector", "Goblin_Hut", "Barbarians", "Magic_Archer"], "Skeleton_Dragons": ["Baby_Dragon", "Arrows", "Balloon", "Bomber", "Barbarian_Barrel"], "Royal_Ghost": ["Clone"], "Goblin_Cage": ["Barbarian_Barrel", "Balloon"], "Zap": ["Archers"], "Fireball": ["Archers", "Bomb_Tower", "Earthquake", "Rascals"], "Spear_Goblins": ["Barbarian_Barrel"], "Lumberjack": ["Dart_Goblin", "Barbarians"], "Freeze": ["Bowler", "Dart_Goblin", "Graveyard"], "Rocket": ["Archers"], "Rage": ["X_Bow"], "Royal_Hogs": ["Barbarian_Barrel"], "Wall_Breakers": ["Barbarians", "Archers"], "Bomber": ["Skeleton_Dragons", "Cannon", "Barbarians", "Goblins"], "Hog_Rider": ["Battle_Ram"], "Mega_Minion": ["Clone", "Dart_Goblin", "Barbarians"], "Goblin_Drill": ["Bats", "Dart_Goblin"], "Barbarian_Hut": ["Balloon", "Battle_Ram"], "The_Log": ["Archers", "Barbarians"], "P.E.K.K.A": ["Dart_Goblin", "Barbarian_Barrel", "Golem"], "Goblin_Gang": ["Dart_Goblin", "Cannon", "Barbarian_Barrel"], "Electro_Spirit": ["Baby_Dragon"], "Heal_Spirit": ["Elite_Barbarians", "Electro_Wizard"], "Giant_Skeleton": ["Elixir_Golem"], "Miner": ["Barbarians"], "Sparky": ["Barbarians"], "Tombstone": ["Elite_Barbarians"], "Knight": ["Dart_Goblin"], "Mega_Knight": ["Battle_Ram"]}
+{
+    "Archers": [
+        "Royal_Delivery",
+        "Giant_Snowball",
+        "Guards",
+        "Electro_Giant",
+        "Clone",
+        "Musketeer",
+        "Poison",
+        "Bowler",
+        "Executioner",
+        "Firecracker",
+        "Skeleton_Army",
+        "Rascals",
+        "Ice_Wizard",
+        "Mortar",
+        "Dart_Goblin",
+        "Mirror",
+        "Goblins",
+        "Cannon_Cart",
+        "Hunter",
+        "Bomb_Tower",
+        "Dark_Prince",
+        "X_Bow",
+        "Cannon",
+        "Wizard",
+        "Princess",
+        "Mother_Witch",
+        "Baby_Dragon",
+        "Golem",
+        "Lightning",
+        "Goblin_Hut",
+        "Magic_Archer",
+        "Skeletons",
+        "Night_Witch",
+        "Ram_Rider",
+        "Electro_Dragon",
+        "Zap",
+        "Furnace",
+        "Fireball",
+        "Balloon",
+        "Three_Musketeers",
+        "Rocket",
+        "Wall_Breakers",
+        "The_Log",
+        "Inferno_Tower",
+        "Fire_Spirit"
+    ],
+    "Royal_Delivery": [
+        "Archers",
+        "Baby_Dragon",
+        "Bandit"
+    ],
+    "Giant_Snowball": [
+        "Archers",
+        "Barbarian_Barrel",
+        "Bomb_Tower",
+        "Arrows"
+    ],
+    "Guards": [
+        "Archers"
+    ],
+    "Bomb_Tower": [
+        "Firecracker",
+        "Graveyard",
+        "Archers",
+        "Goblin_Barrel",
+        "Balloon",
+        "Giant_Snowball",
+        "Elixir_Collector",
+        "Arrows",
+        "Electro_Wizard",
+        "Fireball"
+    ],
+    "Firecracker": [
+        "Bomb_Tower",
+        "Archers",
+        "Ice_Spirit",
+        "Ice_Wizard",
+        "Dart_Goblin",
+        "Barbarians",
+        "Bandit",
+        "Magic_Archer"
+    ],
+    "Electro_Giant": [
+        "Archers",
+        "Barbarians",
+        "Cannon_Cart"
+    ],
+    "Barbarians": [
+        "Bats",
+        "Tesla",
+        "Three_Musketeers",
+        "Skeletons",
+        "Battle_Ram",
+        "Electro_Giant",
+        "Furnace",
+        "Wall_Breakers",
+        "Lumberjack",
+        "Firecracker",
+        "Bomber",
+        "Cannon",
+        "Skeleton_Army",
+        "Bandit",
+        "Balloon",
+        "Miner",
+        "Ice_Wizard",
+        "Sparky",
+        "Mega_Minion",
+        "Fire_Spirit",
+        "Mother_Witch",
+        "Goblin_Giant",
+        "Elixir_Collector",
+        "The_Log"
+    ],
+    "Bats": [
+        "Barbarians",
+        "Cannon_Cart",
+        "Elixir_Golem",
+        "Bowler",
+        "Goblin_Drill",
+        "Dart_Goblin",
+        "Three_Musketeers"
+    ],
+    "Clone": [
+        "Archers",
+        "Royal_Ghost",
+        "Mega_Minion",
+        "Mother_Witch"
+    ],
+    "Musketeer": [
+        "Archers",
+        "Dart_Goblin"
+    ],
+    "Graveyard": [
+        "Bomb_Tower",
+        "Dart_Goblin",
+        "Dark_Prince",
+        "Freeze"
+    ],
+    "Dart_Goblin": [
+        "Elixir_Collector",
+        "Archers",
+        "Battle_Ram",
+        "Goblin_Hut",
+        "Night_Witch",
+        "Lava_Hound",
+        "Graveyard",
+        "Baby_Dragon",
+        "Musketeer",
+        "Electro_Wizard",
+        "Firecracker",
+        "Mirror",
+        "Lumberjack",
+        "Freeze",
+        "Lightning",
+        "Cannon",
+        "Mortar",
+        "Mega_Minion",
+        "P.E.K.K.A",
+        "Goblin_Gang",
+        "Bats",
+        "Goblin_Drill",
+        "Barbarian_Barrel",
+        "Giant",
+        "Knight",
+        "Mother_Witch",
+        "Bandit"
+    ],
+    "Elixir_Collector": [
+        "Dart_Goblin",
+        "Bandit",
+        "Bomb_Tower",
+        "Furnace",
+        "Battle_Ram",
+        "Barbarians"
+    ],
+    "Poison": [
+        "Archers"
+    ],
+    "Bowler": [
+        "Archers",
+        "Bats",
+        "Freeze",
+        "Golem"
+    ],
+    "Executioner": [
+        "Archers",
+        "Ice_Golem",
+        "Cannon_Cart",
+        "Flying_Machine"
+    ],
+    "Skeleton_Army": [
+        "Archers",
+        "Barbarians"
+    ],
+    "Rascals": [
+        "Archers",
+        "Elite_Barbarians",
+        "Fireball"
+    ],
+    "Ice_Wizard": [
+        "Archers",
+        "Firecracker",
+        "Barbarians",
+        "Cannon"
+    ],
+    "Barbarian_Barrel": [
+        "Battle_Healer",
+        "Giant_Snowball",
+        "Goblin_Cage",
+        "Spear_Goblins",
+        "Fisherman",
+        "Royal_Hogs",
+        "Golem",
+        "Skeletons",
+        "Skeleton_Dragons",
+        "Ram_Rider",
+        "Ice_Spirit",
+        "Fire_Spirit",
+        "Dart_Goblin",
+        "Goblin_Gang",
+        "P.E.K.K.A"
+    ],
+    "Battle_Healer": [
+        "Barbarian_Barrel",
+        "Electro_Dragon"
+    ],
+    "Mortar": [
+        "Archers",
+        "Bandit",
+        "Dart_Goblin"
+    ],
+    "Tesla": [
+        "Barbarians"
+    ],
+    "Battle_Ram": [
+        "Dart_Goblin",
+        "Balloon",
+        "Inferno_Tower",
+        "Giant",
+        "Barbarians",
+        "Furnace",
+        "Fire_Spirit",
+        "Elixir_Collector",
+        "Electro_Wizard",
+        "Hog_Rider",
+        "Barbarian_Hut",
+        "Mega_Knight"
+    ],
+    "Mirror": [
+        "Archers",
+        "Dart_Goblin"
+    ],
+    "Goblin_Hut": [
+        "Dart_Goblin",
+        "Electro_Wizard",
+        "Archers",
+        "Furnace"
+    ],
+    "Goblins": [
+        "Archers",
+        "Bomber"
+    ],
+    "Cannon_Cart": [
+        "Archers",
+        "Bandit",
+        "Bats",
+        "Executioner",
+        "Electro_Giant",
+        "Arrows"
+    ],
+    "Electro_Dragon": [
+        "Elite_Barbarians",
+        "Balloon",
+        "Archers",
+        "Fisherman",
+        "Battle_Healer"
+    ],
+    "Elite_Barbarians": [
+        "Electro_Dragon",
+        "Skeleton_Barrel",
+        "Cannon",
+        "Heal_Spirit",
+        "Rascals",
+        "Tombstone"
+    ],
+    "Balloon": [
+        "Electro_Dragon",
+        "Battle_Ram",
+        "Bomb_Tower",
+        "Archers",
+        "Skeleton_Dragons",
+        "Goblin_Cage",
+        "Barbarian_Hut",
+        "Barbarians",
+        "Cannon",
+        "Mother_Witch"
+    ],
+    "Hunter": [
+        "Archers"
+    ],
+    "Night_Witch": [
+        "Dart_Goblin",
+        "Archers"
+    ],
+    "Arrows": [
+        "Goblin_Giant",
+        "Flying_Machine",
+        "Skeleton_Dragons",
+        "Earthquake",
+        "Bomb_Tower",
+        "Giant_Snowball",
+        "X_Bow",
+        "Cannon_Cart"
+    ],
+    "Goblin_Giant": [
+        "Arrows",
+        "Bandit",
+        "Barbarians"
+    ],
+    "Bandit": [
+        "Cannon_Cart",
+        "Elixir_Collector",
+        "Goblin_Giant",
+        "Mortar",
+        "Barbarians",
+        "Firecracker",
+        "Royal_Delivery",
+        "Dart_Goblin"
+    ],
+    "Electro_Wizard": [
+        "Goblin_Hut",
+        "Dart_Goblin",
+        "Battle_Ram",
+        "Bomb_Tower",
+        "Heal_Spirit",
+        "Cannon"
+    ],
+    "Dark_Prince": [
+        "Archers",
+        "Graveyard"
+    ],
+    "X_Bow": [
+        "Archers",
+        "Rage",
+        "Arrows"
+    ],
+    "Goblin_Barrel": [
+        "Bomb_Tower",
+        "Cannon"
+    ],
+    "Baby_Dragon": [
+        "Earthquake",
+        "Archers",
+        "Dart_Goblin",
+        "Skeleton_Dragons",
+        "Electro_Spirit",
+        "Royal_Delivery"
+    ],
+    "Earthquake": [
+        "Baby_Dragon",
+        "Arrows",
+        "Fire_Spirit",
+        "Fireball"
+    ],
+    "Cannon": [
+        "Archers",
+        "Elite_Barbarians",
+        "Dart_Goblin",
+        "Goblin_Barrel",
+        "Bomber",
+        "Barbarians",
+        "Fisherman",
+        "Goblin_Gang",
+        "Ice_Wizard",
+        "Balloon",
+        "Electro_Wizard",
+        "Ice_Golem"
+    ],
+    "Wizard": [
+        "Archers"
+    ],
+    "Princess": [
+        "Archers"
+    ],
+    "Mother_Witch": [
+        "Archers",
+        "Clone",
+        "Barbarians",
+        "Dart_Goblin",
+        "Balloon"
+    ],
+    "Lava_Hound": [
+        "Dart_Goblin"
+    ],
+    "Flying_Machine": [
+        "Arrows",
+        "Executioner"
+    ],
+    "Ice_Spirit": [
+        "Firecracker",
+        "Barbarian_Barrel"
+    ],
+    "Inferno_Tower": [
+        "Battle_Ram",
+        "Archers"
+    ],
+    "Golem": [
+        "Archers",
+        "Barbarian_Barrel",
+        "Fisherman",
+        "Bowler",
+        "P.E.K.K.A"
+    ],
+    "Skeleton_Barrel": [
+        "Elite_Barbarians"
+    ],
+    "Giant": [
+        "Battle_Ram",
+        "Dart_Goblin"
+    ],
+    "Three_Musketeers": [
+        "Barbarians",
+        "Fire_Spirit",
+        "Archers",
+        "Bats"
+    ],
+    "Elixir_Golem": [
+        "Bats",
+        "Giant_Skeleton"
+    ],
+    "Fire_Spirit": [
+        "Three_Musketeers",
+        "Battle_Ram",
+        "Earthquake",
+        "Barbarians",
+        "Barbarian_Barrel",
+        "Archers"
+    ],
+    "Skeletons": [
+        "Barbarians",
+        "Archers",
+        "Barbarian_Barrel"
+    ],
+    "Lightning": [
+        "Archers",
+        "Dart_Goblin"
+    ],
+    "Magic_Archer": [
+        "Archers",
+        "Furnace",
+        "Firecracker"
+    ],
+    "Ram_Rider": [
+        "Archers",
+        "Barbarian_Barrel"
+    ],
+    "Fisherman": [
+        "Electro_Dragon",
+        "Barbarian_Barrel",
+        "Cannon",
+        "Golem"
+    ],
+    "Ice_Golem": [
+        "Executioner",
+        "Cannon"
+    ],
+    "Furnace": [
+        "Battle_Ram",
+        "Archers",
+        "Elixir_Collector",
+        "Goblin_Hut",
+        "Barbarians",
+        "Magic_Archer"
+    ],
+    "Skeleton_Dragons": [
+        "Baby_Dragon",
+        "Arrows",
+        "Balloon",
+        "Bomber",
+        "Barbarian_Barrel"
+    ],
+    "Royal_Ghost": [
+        "Clone"
+    ],
+    "Goblin_Cage": [
+        "Barbarian_Barrel",
+        "Balloon"
+    ],
+    "Zap": [
+        "Archers"
+    ],
+    "Fireball": [
+        "Archers",
+        "Bomb_Tower",
+        "Earthquake",
+        "Rascals"
+    ],
+    "Spear_Goblins": [
+        "Barbarian_Barrel"
+    ],
+    "Lumberjack": [
+        "Dart_Goblin",
+        "Barbarians"
+    ],
+    "Freeze": [
+        "Bowler",
+        "Dart_Goblin",
+        "Graveyard"
+    ],
+    "Rocket": [
+        "Archers"
+    ],
+    "Rage": [
+        "X_Bow"
+    ],
+    "Royal_Hogs": [
+        "Barbarian_Barrel"
+    ],
+    "Wall_Breakers": [
+        "Barbarians",
+        "Archers"
+    ],
+    "Bomber": [
+        "Skeleton_Dragons",
+        "Cannon",
+        "Barbarians",
+        "Goblins"
+    ],
+    "Hog_Rider": [
+        "Battle_Ram"
+    ],
+    "Mega_Minion": [
+        "Clone",
+        "Dart_Goblin",
+        "Barbarians"
+    ],
+    "Goblin_Drill": [
+        "Bats",
+        "Dart_Goblin"
+    ],
+    "Barbarian_Hut": [
+        "Balloon",
+        "Battle_Ram"
+    ],
+    "The_Log": [
+        "Archers",
+        "Barbarians"
+    ],
+    "P.E.K.K.A": [
+        "Dart_Goblin",
+        "Barbarian_Barrel",
+        "Golem"
+    ],
+    "Goblin_Gang": [
+        "Dart_Goblin",
+        "Cannon",
+        "Barbarian_Barrel"
+    ],
+    "Electro_Spirit": [
+        "Baby_Dragon"
+    ],
+    "Heal_Spirit": [
+        "Elite_Barbarians",
+        "Electro_Wizard"
+    ],
+    "Giant_Skeleton": [
+        "Elixir_Golem"
+    ],
+    "Miner": [
+        "Barbarians"
+    ],
+    "Sparky": [
+        "Barbarians"
+    ],
+    "Tombstone": [
+        "Elite_Barbarians"
+    ],
+    "Knight": [
+        "Dart_Goblin"
+    ],
+    "Mega_Knight": [
+        "Battle_Ram"
+    ]
+}
