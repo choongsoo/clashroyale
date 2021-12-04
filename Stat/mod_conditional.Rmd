@@ -1,7 +1,7 @@
 ---
-title: "Basic Model"
+title: "Conditional Models"
 author: "Tom Zhang"
-date: "11/13/2021"
+date: "11/29/2021"
 output: html_document
 ---
 
@@ -10,6 +10,8 @@ output: html_document
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(broom)
+library(jsonlite)
+library(igraph)
 
 clash <- read_csv("sample/clash_sample_500k.csv", 
     col_types = cols(battleid = col_character(), 
@@ -37,6 +39,17 @@ clash <- read_csv("sample/clash_sample_500k.csv",
 clash <-
 clash %>%
   slice(1:16004)  # use a small subset first: ~ 2000 decks
+```
+
+Slight issue: At some point, a few card names has been changed; now both copies are in the database.
+* Fire Spirits -> Fire Spirit
+* Heal -> Heal Spirit
+
+```{r}
+clash <-
+clash %>%
+  mutate(card = str_replace(card, "^Fire Spirits$", "Fire Spirit")) %>%
+  mutate(card = str_replace(card, "^Heal$", "Heal Spirit"))
 ```
 
 ## Data Wrangling
@@ -85,48 +98,86 @@ rm(card_indicators)
 cr
 ```
 
-## Build Formula
+## Conditional Models
+
+Subset the data to include only matches with a specified card, e.g., Royal Giant, and then fit the model with no interaction terms.
 
 ```{r}
-# formula: battlewon ~ cards + card interactions
-f <- as.formula(paste("battlewon ~", paste(interactions, collapse = " + ")))
+# get card name columns
+cards <- names(cr)[3:(ncol(cr) - 1)]
+
+# a place to store coefficients of every conditional model
+# card = main card, term = all other cards, estimate = coef; exclude intercept
+all_mods <- tibble(card = NA, term = NA, estimate = NA)
+
+for (i in 1:length(cards)) {
+  card <- cards[i]
+  
+  # subset data
+  sub <- filter(cr, !!as.symbol(card) == 1)
+  
+  # log-odds ~ with all other cards, no interactions
+  f <- as.formula(paste("battlewon ~", paste(cards[! cards %in% card], collapse = " + ")))
+  mod <- glm(f, data = sub, family = "binomial")
+  
+  tidy <-
+    mod %>%
+      tidy() %>%
+      mutate(card = card) %>%
+      select(card, term, estimate) %>%
+      slice(-1)
+  
+  all_mods <- bind_rows(all_mods, tidy)
+}
+
+# keep only positive coefs
+synergies <- 
+  all_mods %>%
+    filter(estimate > 15) %>%  # TODO find the optimal magnitude
+    select(card, term)
+
+# add back cards with no positive coefs
+tmp <- tibble(card = cards, term = NA)
+no_synergies <- anti_join(tmp, synergies, by = "card")  # get all cards not found in synergies df
+synergies <- bind_rows(synergies, no_synergies)
 ```
 
-## Fit Model
+# Save Graph to JSON
 
 ```{r}
-t1 <- Sys.time()
+json_df <-
+synergies %>%
+  group_by(card) %>%
+  summarise(adjacent = list(term)) %>%
+  ungroup() %>%
+  column_to_rownames("card") %>%
+  t() %>%
+  as_tibble()
 
-mod_basic_logistic <- glm(f, data = cr, family = "binomial")
-
-t2 <- Sys.time()
-time_elapsed <- t2 - t1
-print(paste("Time elapsed fitting model (min):", time_elapsed))
-```
-
-## Coefficients
-
-Get top 200 interaction terms with positive slopes.
-
-```{r}
-df_mod <- tidy(mod)  # a data frame of model coefficients
-
-df_coef_200 <-
-  df_mod %>%
-    filter(str_detect(term, ":")) %>%
-    filter(estimate > 0) %>%
-    arrange(desc(estimate)) %>%
-    slice(1:200)
-
-interactions_200 <- df_coef_200$term  # a vector of 200 interaction terms
+json <- toJSON(unbox(fromJSON(toJSON(json_df))))
+json <- str_replace_all(json, "null", "")  # clean up [null]
 ```
 
 ```{r}
-# save interactions_200
-write(interactions_200, "interactions_200.txt")
+write(json, "graph_conditional.json")
 ```
 
-## Network
+# iGraph Cliques
 
-Build an adjacency list that represents this graph (network).
-This will be done in Python.
+```{r}
+g <- graph_from_data_frame(synergies)
+plot(g)
+cliques(g, min = 8, max = 8)
+```
+
+
+
+
+
+
+
+
+
+
+
+

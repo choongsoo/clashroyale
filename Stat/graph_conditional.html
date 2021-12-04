@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+
+<head>
+    <title>Clash Synergy Network</title>
+</head>
+
+<body>
+    <!-- a container for the graph -->
+    <div id="container"></div>
+
+    <!-- D3.js (v7) -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- graph function -->
+    <script>
+        /**
+         * a helper function that return an adjusted cooridinate
+         * to restrict nodes within the container's boundaries
+         * 
+         * coord: x | y
+         * bound: width | height (container's)
+         * padding: usually the width/height of the node
+         */
+        function restrictCoordinate(coord, bound, padding) {
+            return Math.max(-1 * bound / 2 + padding, Math.min(bound / 2 - padding, coord));
+        }
+
+        /**
+         * a helper function that creates an id for an edge between two vertices
+         */
+        function makeEdgeId(v1, v2) {
+            return [v1, v2].sort().join("-");
+        }
+
+        /**
+         * a helper function that changes outline color of current node and its adjacent nodes
+         */
+        function updateAdjacencyOutline(element, nodeColor, edgeColor, graph) {
+            const outlineVal = (nodeColor !== "none") ? `medium solid ${nodeColor}` : "none";
+
+            // modify current element's outline
+            d3.select(element)
+                .attr("style", `outline: ${outlineVal};`);
+
+            // get a list of adjacent vertex id's and modify their outlines
+            const adjList = graph[element.id];
+            adjList.forEach(id => {
+                d3.select(document.querySelector(`#${id}`))
+                    .attr("style", `outline: ${outlineVal};`);
+            });
+
+            // make a list of edge class names and modify their color
+            const edges = adjList.map(id => makeEdgeId(element.id, id));
+            edges.forEach(cls => {
+                document.querySelectorAll(`.${cls}`).forEach(element => {
+                    d3.select(element)
+                        .attr("stroke", edgeColor);
+                });
+            });
+        }
+
+        /**
+         * a function that produces an svg as an interactive graph
+         */
+        async function constructGraph() {
+            // create list of card-URL mappings for vertex icons
+            const cardsResp = await fetch("cards.json");
+            const cardsJSON = await cardsResp.json();
+            const cardsArray = cardsJSON.items.map(card => {
+                let id = card.name;
+                id = id.replaceAll(" ", "_");
+                id = id.replaceAll("-", "_");
+                const obj = {};
+                obj[id] = { name: card.name, url: card.iconUrls.medium };
+                return obj;
+            });
+            const allCards = cardsArray.reduce(((r, c) => Object.assign(r, c)), {});
+
+            // read in graph json
+            const graphResp = await fetch("graph_conditional.json");
+            const graph = await graphResp.json();
+
+            // transform graph data into D3-compliant format
+            const vertices = Object.keys(graph),
+                nodes = vertices.map(d => {
+                    const card = allCards[d];
+                    return { id: d, name: card.name, url: card.url, group: 1 };
+                }),
+                links = d3.merge(vertices.map(source => {
+                    return graph[source].map(target => {
+                        return { source: source, target: target };
+                    });
+                }));
+
+            // construct forces
+            const forceNode = d3.forceManyBody();
+            const forceLink = d3.forceLink(links).id(({ index: i }) => vertices[i]);
+
+            const simulation = d3.forceSimulation(nodes)
+                .force("link", forceLink
+                    .distance(200))
+                .force("charge", forceNode
+                    .strength(-100))
+                .force("center", d3.forceCenter())
+                .on("tick", ticked);
+
+            // create DOM elements
+            const width = 1400, // helper vars
+                height = 700;
+
+            const svg = d3.create("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", [-width / 2, -height / 2, width, height])
+                .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
+
+            const link = svg.append("g")
+                .attr("stroke", "#ccc")
+                .attr("stroke-width", 1.5)
+                .selectAll("line")
+                .data(links)
+                .join("line")
+                .attr("class", d => makeEdgeId(d.source.id, d.target.id));
+            // note: using class instead of id because edges contain duplicates
+
+            const imgWidth = 32, // helper vars
+                imgHeight = imgWidth,
+                imgX = -1 * imgWidth / 2,
+                imgY = imgX;
+
+            const node = svg.append("g")
+                .selectAll("image")
+                .data(nodes)
+                .join("image")
+                .attr("id", d => d.id)
+                .attr("xlink:href", d => d.url)
+                .attr("x", imgX)
+                .attr("y", imgY)
+                .attr("width", imgWidth)
+                .attr("height", imgHeight)
+                .call(drag(simulation));
+
+            // add hover effects to nodes
+            node
+                .on('mouseover', function (d, i) {
+                    updateAdjacencyOutline(this, "red", "red", graph);
+                })
+                .on('mouseout', function (d, i) {
+                    updateAdjacencyOutline(this, "none", "#ccc", graph);
+                });
+
+            // animation logic
+            function ticked() {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node.attr("transform", d => {
+                    // restrict node coordinates to be within container boundaries
+                    const newX = restrictCoordinate(d.x, width, imgWidth);
+                    const newY = restrictCoordinate(d.y, height, imgHeight);
+                    d.x = newX; // important: update source data so that edges (links) can be updated
+                    d.y = newY;
+                    return "translate(" + newX + "," + newY + ")";
+                });
+            }
+
+            // node drag logic
+            function drag(simulation) {
+                function dragstarted(event) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    event.subject.fx = event.subject.x;
+                    event.subject.fy = event.subject.y;
+                }
+
+                function dragged(event) {
+                    event.subject.fx = restrictCoordinate(event.x, width, imgWidth);
+                    event.subject.fy = restrictCoordinate(event.y, height, imgHeight);
+                }
+
+                function dragended(event) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    event.subject.fx = null;
+                    event.subject.fy = null;
+                }
+
+                return d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended);
+            }
+
+            return svg.node();
+        }
+    </script>
+
+    <!-- event listeners -->
+    <script>
+        window.addEventListener("load", () => {
+            // insert graph into document
+            constructGraph()
+                .then(graph => {
+                    console.log(graph);
+                    return graph
+                })
+                .then(graph => document.querySelector("#container").appendChild(graph));
+        });
+    </script>
+</body>
+
+</html>
