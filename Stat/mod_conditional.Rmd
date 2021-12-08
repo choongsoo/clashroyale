@@ -125,7 +125,8 @@ for (i in 1:length(cards)) {
       tidy() %>%
       mutate(card = card) %>%
       select(card, term, estimate) %>%
-      slice(-1)
+      slice(-1) %>%
+      slice_max(order_by = estimate, n=8)
   
   all_mods <- bind_rows(all_mods, tidy)
 }
@@ -133,7 +134,7 @@ for (i in 1:length(cards)) {
 # keep only positive coefs
 synergies <- 
   all_mods %>%
-    filter(estimate > 15) %>%  # TODO find the optimal magnitude
+    filter(estimate > 100) %>%  # TODO find the optimal magnitude
     select(card, term)
 
 # add back cards with no positive coefs
@@ -141,6 +142,18 @@ tmp <- tibble(card = cards, term = NA)
 no_synergies <- anti_join(tmp, synergies, by = "card")  # get all cards not found in synergies df
 synergies <- bind_rows(synergies, no_synergies)
 ```
+
+
+```{r}
+all_mods %>%
+  ggplot(., aes(x = estimate)) +
+  geom_histogram() +
+  scale_x_continuous(limits = c(50, 150))
+```
+
+
+
+
 
 # Save Graph to JSON
 
@@ -167,7 +180,7 @@ write(json, "graph_conditional.json")
 ```{r}
 g <- graph_from_data_frame(synergies)
 plot(g)
-cliques(g, min = 8, max = 8)
+cliques(g, min = 2, max = 8)
 ```
 
 
