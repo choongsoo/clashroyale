@@ -218,6 +218,16 @@ f <- paste(
 mod_joint <- glm(f, data = cr, family = "binomial")
 ```
 
+## Examine Model Coefs
+
+```{r}
+mod_joint %>%
+  tidy() %>%
+  ggplot(., aes(x = estimate)) +
+  geom_histogram() +
+  scale_x_continuous(limits = c(-5, 50))
+```
+
 ## Get Positive Interaction Terms
 
 ***This is the final graph***
