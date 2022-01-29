@@ -79,7 +79,7 @@
             const allCards = cardsArray.reduce(((r, c) => Object.assign(r, c)), {});
 
             // read in graph json
-            const graphResp = await fetch("graph.json?0");
+            const graphResp = await fetch("graph_basic.json?0");
             const graph = await graphResp.json();
 
             // transform graph data into D3-compliant format

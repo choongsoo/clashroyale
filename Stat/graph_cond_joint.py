@@ -3,7 +3,7 @@ import json
 # the purpose of this script is to produce graphs (networks) of card interaction terms
 
 # read in data
-with open("interactions_200.txt") as f:
+with open("int_cond_joint.txt") as f:
     interactions = f.read().splitlines()
 
 # build a graph of all interaction terms in the form of an adjacency list
@@ -23,5 +23,5 @@ for pair in interactions:
     graph[card2].append(card1)
 
 # save to json file
-with open("graph.json", "w") as outfile:
+with open("graph_cond_joint.json", "w") as outfile:
     json.dump(graph, outfile)

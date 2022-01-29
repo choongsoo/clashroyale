@@ -12,6 +12,7 @@ library(tidyverse)
 library(broom)
 library(jsonlite)
 library(igraph)
+library(purrr)
 
 clash <- read_csv("sample/clash_sample_500k.csv", 
     col_types = cols(battleid = col_character(), 
@@ -143,6 +144,7 @@ no_synergies <- anti_join(tmp, synergies, by = "card")  # get all cards not foun
 synergies <- bind_rows(synergies, no_synergies)
 ```
 
+## Examine all_mods Coefficients
 
 ```{r}
 all_mods %>%
@@ -151,11 +153,9 @@ all_mods %>%
   scale_x_continuous(limits = c(50, 150))
 ```
 
+## Save Graph to JSON
 
-
-
-
-# Save Graph to JSON
+***This is only an intermediate output, not the final one.***
 
 ```{r}
 json_df <-
@@ -172,25 +172,71 @@ json <- str_replace_all(json, "null", "")  # clean up [null]
 ```
 
 ```{r}
-write(json, "graph_conditional.json")
+write(json, "graph_cond.json")
 ```
 
-# iGraph Cliques
+## iGraph Cliques
+
+The cliques will determine which interaction terms to include in a joint model.
 
 ```{r}
 g <- graph_from_data_frame(synergies)
 plot(g)
-cliques(g, min = 2, max = 8)
+cliques(g, min = 2, max = 2)
+clique_out <- cliques(g, min = 2, max = 2)
 ```
 
+## Extract Interaction Terms
 
+```{r}
+ints <-
+clique_out %>%
+  map(., function(clique) {
+    vertices <- as_ids(clique)
+    vertices <- vertices[vertices != "NA"]
+    if (length(vertices) == 1) {  # an interaction needs at least 2 terms
+      return(NULL)
+    } else {
+      return(paste(vertices, collapse = ":"))
+    }
+  }) %>%
+  unlist()
+```
 
+## Joint Model
 
+With select interaction terms.
 
+```{r}
+f <- paste(
+  "battlewon ~",
+  paste(cards, collapse = " + "),
+  " + ",
+  paste(ints, collapse = " + ")
+)
 
+mod_joint <- glm(f, data = cr, family = "binomial")
+```
 
+## Get Positive Interaction Terms
 
+***This is the final graph***
 
+```{r}
+df_mod <- tidy(mod_joint)  # a data frame of model coefficients
 
+df_coef_positive <-
+  df_mod %>%
+    filter(str_detect(term, ":")) %>%
+    filter(estimate > 0) %>%
+    arrange(desc(estimate))
 
+int_cond_joint <- df_coef_positive$term  # a vector of interaction terms
 
+write(int_cond_joint, "int_cond_joint.txt")  # conditional joint model positive interactions
+```
+
+## Network
+
+Build an adjacency list that represents this graph (network).
+This will be done in Python.

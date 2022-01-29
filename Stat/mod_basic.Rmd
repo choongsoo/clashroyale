@@ -118,12 +118,12 @@ df_coef_200 <-
     arrange(desc(estimate)) %>%
     slice(1:200)
 
-interactions_200 <- df_coef_200$term  # a vector of 200 interaction terms
+int_basic <- df_coef_200$term  # a vector of 200 interaction terms
 ```
 
 ```{r}
 # save interactions_200
-write(interactions_200, "interactions_200.txt")
+write(int_basic, "int_basic.txt")
 ```
 
 ## Network
