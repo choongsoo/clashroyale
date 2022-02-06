@@ -55,6 +55,7 @@
         function cleanUpName(originalName) {
             let cleanName = originalName.replaceAll(" ", "_");
             cleanName = cleanName.replaceAll("-", "_");
+            cleanName = cleanName.replaceAll("\.", "_");
             return cleanName;
         }
 
@@ -142,7 +143,7 @@
             const allCards = cardsArray.reduce(((r, c) => Object.assign(r, c)), {});
 
             // read in graph json
-            const graphResp = await fetch("graph_cond_joint.json?0");
+            const graphResp = await fetch("graph_cond_joint.json?1");
             let graph = await graphResp.json();
 
             // build ego network if specified
@@ -318,7 +319,7 @@
                 let cards = cardsJSON.items.map(item => item.name);
 
                 // cards in the graph
-                const graphResp = await fetch("graph_cond_joint.json?0");
+                const graphResp = await fetch("graph_cond_joint.json?1");
                 const graph = await graphResp.json();
                 const graphVertices = Object.keys(graph);
 

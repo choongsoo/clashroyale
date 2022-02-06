@@ -63,6 +63,7 @@ x <- model.matrix(~0 + card + cardlevel, model.frame(~ ., clash, na.action=na.pa
 colnames(x) <- str_remove_all(colnames(x), "card")
 colnames(x) <- str_replace_all(colnames(x), " ", "_")
 colnames(x) <- str_replace_all(colnames(x), "-", "_")
+colnames(x) <- str_replace_all(colnames(x), "\\.", "_")
 
 # save a copy of just card indicators
 card_indicators <- x[, -ncol(x)]

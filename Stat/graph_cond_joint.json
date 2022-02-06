@@ -59,7 +59,7 @@
         "Royal_Giant",
         "Battle_Ram",
         "Royal_Ghost",
-        "P.E.K.K.A"
+        "P_E_K_K_A"
     ],
     "Ram_Rider": [
         "Mother_Witch",
@@ -82,7 +82,7 @@
     ],
     "Skeleton_Barrel": [
         "Skeletons",
-        "P.E.K.K.A",
+        "P_E_K_K_A",
         "Goblin_Giant"
     ],
     "Skeletons": [
@@ -163,13 +163,13 @@
     ],
     "Giant": [
         "Dart_Goblin",
-        "P.E.K.K.A",
+        "P_E_K_K_A",
         "Wall_Breakers",
         "Royal_Recruits",
         "Goblin_Gang",
         "Furnace"
     ],
-    "P.E.K.K.A": [
+    "P_E_K_K_A": [
         "Giant",
         "Fisherman",
         "Barbarian_Hut",
@@ -246,7 +246,7 @@
         "Royal_Hogs"
     ],
     "Fisherman": [
-        "P.E.K.K.A",
+        "P_E_K_K_A",
         "Lightning",
         "Dark_Prince",
         "Dart_Goblin",
@@ -291,7 +291,7 @@
         "Spear_Goblins"
     ],
     "Barbarian_Hut": [
-        "P.E.K.K.A"
+        "P_E_K_K_A"
     ],
     "Battle_Ram": [
         "Firecracker",
@@ -380,7 +380,7 @@
         "Night_Witch",
         "Bomber",
         "Goblin_Gang",
-        "P.E.K.K.A"
+        "P_E_K_K_A"
     ],
     "Hunter": [
         "Elixir_Golem",
@@ -399,7 +399,7 @@
     "Elixir_Collector": [
         "Rocket",
         "Goblin_Gang",
-        "P.E.K.K.A",
+        "P_E_K_K_A",
         "Dark_Prince"
     ],
     "Rocket": [
@@ -450,7 +450,7 @@
     ],
     "Giant_Snowball": [
         "Graveyard",
-        "P.E.K.K.A",
+        "P_E_K_K_A",
         "Archers",
         "Guards"
     ],
@@ -527,7 +527,7 @@
     "Golem": [
         "Electro_Dragon",
         "Royal_Ghost",
-        "P.E.K.K.A",
+        "P_E_K_K_A",
         "Miner"
     ],
     "Inferno_Dragon": [

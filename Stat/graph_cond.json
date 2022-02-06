@@ -2,27 +2,32 @@
     "Archer_Queen": [],
     "Archers": [
         "Electro_Dragon",
-        "Giant_Snowball",
-        "Flying_Machine",
         "Royal_Hogs",
-        "Fisherman",
+        "Hunter",
+        "Lava_Hound",
+        "Giant_Snowball",
         "Mirror",
         "Rocket",
-        "Cannon"
+        "Electro_Giant"
     ],
     "Arrows": [
-        "Battle_Healer",
-        "Cannon_Cart",
-        "Royal_Hogs",
         "Archer_Queen",
+        "Goblin_Giant",
+        "Royal_Hogs",
         "Electro_Dragon",
-        "Heal_Spirit",
         "Earthquake",
-        "Barbarian_Hut"
+        "Electro_Giant",
+        "Skeleton_King",
+        "Giant_Snowball"
     ],
     "Baby_Dragon": [],
     "Balloon": [],
-    "Bandit": [],
+    "Bandit": [
+        "Goblin_Giant",
+        "Mother_Witch",
+        "Flying_Machine",
+        "Giant"
+    ],
     "Barbarian_Barrel": [
         "Flying_Machine",
         "Lava_Hound",
@@ -45,13 +50,13 @@
     "Bats": [],
     "Battle_Healer": [],
     "Battle_Ram": [
-        "Dart_Goblin",
-        "Hog_Rider",
         "Musketeer",
+        "Hog_Rider",
+        "Dart_Goblin",
         "Knight",
-        "Mega_Minion",
         "Inferno_Dragon",
         "Night_Witch",
+        "Inferno_Tower",
         "Mirror"
     ],
     "Bomb_Tower": [
@@ -68,9 +73,9 @@
         "Fisherman"
     ],
     "Bowler": [
+        "Electro_Dragon",
         "Battle_Healer",
-        "Barbarian_Hut",
-        "Electro_Dragon"
+        "Barbarian_Hut"
     ],
     "Cannon": [
         "Fisherman",
@@ -94,30 +99,30 @@
         "Mother_Witch"
     ],
     "Dark_Prince": [
-        "Firecracker",
+        "Fisherman",
+        "Three_Musketeers",
+        "Dart_Goblin",
         "Goblin_Cage",
-        "Mother_Witch",
+        "Firecracker",
         "Rocket",
         "Elixir_Collector",
-        "X_Bow",
-        "Bowler",
-        "Dart_Goblin"
+        "Ice_Spirit"
     ],
     "Dart_Goblin": [
-        "Cannon",
-        "Elixir_Collector",
-        "Mega_Minion",
-        "Night_Witch",
-        "Lumberjack",
-        "Archers",
-        "Mirror",
-        "Balloon"
+        "Golem",
+        "Hunter",
+        "Lava_Hound",
+        "Skeletons",
+        "Ram_Rider",
+        "Battle_Ram",
+        "Giant",
+        "Fisherman"
     ],
     "Earthquake": [
         "Battle_Healer",
         "Bomber",
-        "Firecracker",
         "Bandit",
+        "Firecracker",
         "Fire_Spirit"
     ],
     "Electro_Dragon": [
@@ -126,24 +131,27 @@
     "Electro_Giant": [
         "Clone",
         "Electro_Wizard",
-        "Arrows",
         "Barbarians",
+        "Archers",
         "Inferno_Dragon",
-        "Archers"
+        "Arrows"
     ],
     "Electro_Spirit": [],
     "Electro_Wizard": [],
-    "Elite_Barbarians": [],
+    "Elite_Barbarians": [
+        "Mother_Witch",
+        "Battle_Ram"
+    ],
     "Elixir_Collector": [],
     "Elixir_Golem": [
         "Dark_Prince",
         "Giant_Snowball",
         "Battle_Healer",
         "Hunter",
-        "Balloon",
         "Giant_Skeleton",
+        "Balloon",
         "Battle_Ram",
-        "Bomber"
+        "Electro_Wizard"
     ],
     "Executioner": [],
     "Fire_Spirit": [
@@ -209,23 +217,23 @@
     "Goblin_Cage": [],
     "Goblin_Drill": [],
     "Goblin_Gang": [
-        "Archer_Queen",
-        "Flying_Machine",
-        "Fisherman",
-        "Bomb_Tower",
-        "Skeleton_Dragons",
         "Elixir_Collector",
+        "Flying_Machine",
+        "Skeleton_Dragons",
         "Cannon_Cart",
-        "Lava_Hound"
+        "Goblins",
+        "Giant",
+        "Lava_Hound",
+        "Tombstone"
     ],
     "Goblin_Giant": [],
     "Goblin_Hut": [
         "Bomber",
         "Electro_Wizard",
         "Dark_Prince",
+        "Elite_Barbarians",
         "Flying_Machine",
-        "Freeze",
-        "Elite_Barbarians"
+        "Freeze"
     ],
     "Goblins": [
         "Bomber",
@@ -235,17 +243,17 @@
     "Golem": [
         "Royal_Ghost",
         "Electro_Dragon",
-        "P.E.K.K.A"
+        "P_E_K_K_A"
     ],
     "Graveyard": [
         "Barbarians",
-        "Giant_Snowball",
         "Ice_Spirit",
-        "Inferno_Dragon",
+        "Giant_Snowball",
         "Electro_Dragon",
+        "Inferno_Dragon",
         "Barbarian_Barrel",
         "Baby_Dragon",
-        "Elite_Barbarians"
+        "Goblin_Gang"
     ],
     "Guards": [
         "Electro_Dragon",
@@ -271,23 +279,23 @@
     ],
     "Ice_Golem": [
         "Flying_Machine",
-        "Mother_Witch",
-        "Earthquake",
-        "Archer_Queen",
         "Goblin_Giant",
+        "Barbarian_Barrel",
+        "Goblin_Barrel",
+        "Goblin_Gang",
+        "Archer_Queen",
         "Mega_Knight",
-        "Lumberjack",
-        "Barbarian_Barrel"
+        "Electro_Wizard"
     ],
     "Ice_Spirit": [
         "Battle_Healer",
         "Goblin_Drill",
+        "Dark_Prince",
         "Elite_Barbarians",
-        "Battle_Ram",
-        "Giant_Skeleton",
+        "Cannon_Cart",
         "Bomber",
-        "Goblin_Giant",
-        "Golem"
+        "Rage",
+        "Giant_Skeleton"
     ],
     "Ice_Wizard": [
         "Royal_Hogs",
@@ -299,16 +307,7 @@
         "Barbarian_Barrel",
         "Rascals"
     ],
-    "Inferno_Dragon": [
-        "Cannon_Cart",
-        "Golden_Knight",
-        "Goblin_Drill",
-        "Mother_Witch",
-        "Goblin_Giant",
-        "Bomb_Tower",
-        "Bowler",
-        "Three_Musketeers"
-    ],
+    "Inferno_Dragon": [],
     "Inferno_Tower": [],
     "Knight": [],
     "Lava_Hound": [
@@ -326,25 +325,25 @@
     ],
     "Lumberjack": [],
     "Magic_Archer": [
+        "Cannon_Cart",
+        "Royal_Giant",
         "Archer_Queen",
         "Cannon",
-        "Cannon_Cart",
-        "Tombstone",
-        "Bomb_Tower",
-        "Skeleton_Barrel",
         "Furnace",
-        "Royal_Giant"
+        "Bomb_Tower",
+        "Ice_Golem",
+        "Tombstone"
     ],
     "Mega_Knight": [],
     "Mega_Minion": [
-        "Hunter",
+        "Elite_Barbarians",
+        "Electro_Giant",
         "Firecracker",
         "Goblin_Hut",
-        "Elite_Barbarians",
-        "Magic_Archer",
-        "Battle_Healer",
-        "Minion_Horde",
-        "Electro_Giant"
+        "Rage",
+        "Rascals",
+        "Hunter",
+        "Prince"
     ],
     "Miner": [
         "Electro_Dragon",
@@ -356,7 +355,7 @@
         "Earthquake",
         "Golem"
     ],
-    "Mini_P.E.K.K.A": [],
+    "Mini_P_E_K_K_A": [],
     "Minion_Horde": [],
     "Minions": [],
     "Mirror": [
@@ -380,15 +379,15 @@
         "Electro_Giant",
         "Giant_Skeleton"
     ],
-    "P.E.K.K.A": [
+    "P_E_K_K_A": [
         "Royal_Recruits",
+        "Barbarian_Hut",
+        "Elixir_Collector",
         "Skeleton_Barrel",
         "Giant_Snowball",
-        "Royal_Hogs",
         "Tombstone",
-        "Elixir_Collector",
-        "Lava_Hound",
-        "Electro_Dragon"
+        "Giant",
+        "Fisherman"
     ],
     "Poison": [
         "Spear_Goblins",
@@ -399,13 +398,11 @@
         "Mega_Knight"
     ],
     "Prince": [
-        "Flying_Machine",
-        "Tombstone",
-        "Goblins",
         "Royal_Hogs",
-        "Bomb_Tower",
-        "Royal_Delivery",
-        "Ice_Golem"
+        "Ice_Golem",
+        "Goblins",
+        "Flying_Machine",
+        "Bomb_Tower"
     ],
     "Princess": [],
     "Rage": [],
@@ -422,10 +419,12 @@
     "Rocket": [
         "Battle_Healer",
         "Elixir_Collector",
-        "Hunter",
+        "Goblin_Hut",
+        "Giant",
+        "Dark_Prince",
         "Ice_Golem",
-        "Skeleton_Barrel",
-        "Battle_Ram"
+        "Spear_Goblins",
+        "Arrows"
     ],
     "Royal_Delivery": [],
     "Royal_Ghost": [
@@ -464,8 +463,8 @@
         "Goblin_Giant",
         "Furnace",
         "Electro_Wizard",
-        "Heal_Spirit",
         "Bats",
+        "Heal_Spirit",
         "Bowler"
     ],
     "Skeleton_Dragons": [],
@@ -473,12 +472,12 @@
     "Skeletons": [
         "Skeleton_Barrel",
         "Battle_Ram",
-        "Mirror",
-        "Furnace",
-        "Witch",
-        "Tombstone",
+        "Dark_Prince",
+        "Ram_Rider",
+        "Freeze",
         "Electro_Giant",
-        "Ram_Rider"
+        "Electro_Spirit",
+        "Mirror"
     ],
     "Sparky": [
         "Tesla",
@@ -501,17 +500,24 @@
         "Bandit"
     ],
     "Tesla": [
-        "Fire_Spirit"
+        "Furnace",
+        "Dark_Prince",
+        "Night_Witch",
+        "Princess",
+        "Wizard",
+        "Spear_Goblins",
+        "Graveyard",
+        "Witch"
     ],
     "The_Log": [
         "Royal_Recruits",
-        "Skeleton_King",
+        "Goblin_Hut",
+        "Royal_Delivery",
         "Goblin_Cage",
         "Archer_Queen",
-        "Goblin_Hut",
         "Bowler",
-        "Mortar",
-        "Wall_Breakers"
+        "Skeleton_King",
+        "Three_Musketeers"
     ],
     "Three_Musketeers": [],
     "Tombstone": [
@@ -536,12 +542,12 @@
     "Wall_Breakers": [
         "Freeze",
         "Giant",
+        "P_E_K_K_A",
         "Night_Witch",
-        "Bowler",
-        "P.E.K.K.A",
         "Goblin_Gang",
-        "Rage",
-        "Dart_Goblin"
+        "Bowler",
+        "Dart_Goblin",
+        "Bomber"
     ],
     "Witch": [],
     "Wizard": [],
