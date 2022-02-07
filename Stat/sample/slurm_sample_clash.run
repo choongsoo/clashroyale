@@ -17,7 +17,7 @@ echo "Number of Tasks Allocated      = $SLURM_NTASKS"
 echo "Number of Cores/Task Allocated = $SLURM_CPUS_PER_TASK"
 
 
-PGPASSWORD=the-real-password pg_dump -U clashuser -h 10.32.95.90 -d clash -f sample.sql
+PGPASSWORD=the-real-password psql -U clashuser -h 10.32.95.90 -d clash -f sample.sql
 # sbatch slurm_sample_clash.run
 
 
