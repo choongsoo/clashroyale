@@ -1,0 +1,274 @@
+---
+title: "Lasso Conditional Models"
+author: "Tom Zhang"
+date: "11/29/2021"
+output: html_document
+---
+
+## Imports
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(broom)
+library(jsonlite)
+library(igraph)
+library(purrr)
+library(glmnet)
+
+clash <- read_csv("sample/clash_sample_500k.csv", 
+    col_types = cols(battleid = col_character(), 
+        playertag = col_character(), battletime = col_datetime(format = "%Y-%m-%d %H:%M:%S"), 
+        type = col_character(), isladdertournament = col_logical(), 
+        arenaid = col_number(), arena = col_character(), 
+        gamemodeid = col_number(), gamemode = col_character(), 
+        deckselection = col_character(), 
+        team = col_logical(), card = col_character(), 
+        cardlevel = col_number(), clantag = col_character(), 
+        startingtrophies = col_number(), 
+        trophychange = col_number(), crowns = col_number(), 
+        princesstower1hitpoints = col_number(), 
+        princesstower2hitpoints = col_number(), 
+        kingtowerhitpoints = col_number(), 
+        boatbattleside = col_character(), 
+        boatbattlewon = col_logical(), newboattowersdestroyed = col_number(), 
+        prevboattowersdestroyed = col_number(), 
+        remainingboattowers = col_number()))
+```
+
+## Subset
+
+```{r}
+# clash <-
+# clash %>%
+#   slice(1:32000)  # use a small subset first: ~ 4000 decks
+```
+
+Slight issue: At some point, a few card names has been changed; now both copies are in the database.
+* Fire Spirits -> Fire Spirit
+* Heal -> Heal Spirit
+
+```{r}
+clash <-
+clash %>%
+  mutate(card = str_replace(card, "^Fire Spirits$", "Fire Spirit")) %>%
+  mutate(card = str_replace(card, "^Heal$", "Heal Spirit"))
+```
+
+Another unsolved internal error: A few cards are labeled "rightCard7", "rightCard8", etc. Need further investigation on data collection process.
+
+```{r}
+clash <-
+clash %>%
+  filter(!str_starts(card, "(left)|(right)"))
+```
+
+
+## Data Wrangling
+
+```{r}
+# a matrix of card indicators
+x <- model.matrix(~0 + card + cardlevel, model.frame(~ ., clash, na.action=na.pass))
+
+# clean up col names
+colnames(x) <- str_remove_all(colnames(x), "card")
+colnames(x) <- str_replace_all(colnames(x), " ", "_")
+colnames(x) <- str_replace_all(colnames(x), "-", "_")
+colnames(x) <- str_replace_all(colnames(x), "\\.", "_")
+
+# save a copy of just card indicators
+card_indicators <- x[, -ncol(x)]
+
+# ignore levels for now
+
+# # transform card levels into the same structure of card indicators
+# card_levels = sweep(x[,-ncol(x)], MARGIN = 1, STATS = x[,ncol(x)], FUN = "*")
+# 
+# # make col names for card levels
+# colnames(card_levels) = paste(colnames(card_levels),"_Level",sep = "")
+
+# create names for all card and card interaction terms to be used later
+interactions <- labels(terms(~ .^2, data = x[1:10, -ncol(x)]))
+
+rm(x)  # free up memory
+
+# put all columns together
+cr <-
+  # cbind(card_indicators, card_levels) %>%
+  card_indicators %>%
+  as_tibble() %>%
+  mutate(battleid = clash$battleid,
+         playertag = clash$playertag,
+         battlewon = clash$trophychange) %>%
+  group_by(battleid, playertag) %>%
+  summarize_if(is.numeric, sum) %>%
+  ungroup() %>%
+  mutate(battlewon = if_else(battlewon >= 0 | is.na(battlewon), 1, 0))  # convert NA to 1
+
+rm(clash)  # free up memory
+rm(card_indicators)
+
+cr
+```
+
+## Conditional Models (Lasso Regression)
+
+Subset the data to include only matches with a specified card, e.g., Royal Giant, and then fit the model with no interaction terms.
+
+```{r}
+# get card name columns
+cards <- names(cr)[3:(ncol(cr) - 1)]
+
+# a place to store coefficients of every conditional model
+# card = main card, term = all other cards, estimate = coef; exclude intercept
+all_mods <- tibble(card = NA, term = NA, estimate = NA)
+
+for (i in 1:length(cards)) {
+  card <- cards[i]
+  
+  # subset data
+  sub <- filter(cr, !!as.symbol(card) == 1)
+  
+  # response var and predictor matrix
+  y <- sub$battlewon
+  x <- data.matrix(sub[, cards[! cards %in% card]])  # all other cards
+  
+  # perform k-fold cross-validation to find optimal lambda value
+  # note: this does not work if response is constant - problem with small datasets
+  cv_model <- cv.glmnet(x, y, alpha = 1)
+  
+  # find optimal lambda value that minimizes test MSE
+  best_lambda <- cv_model$lambda.min
+  
+  # find coefficients of best model
+  mod <- glmnet(x, y, alpha = 1, lambda = best_lambda)
+  
+  tidy <-
+    mod %>%
+      tidy() %>%
+      mutate(card = card) %>%
+      select(card, term, estimate) %>%
+      slice(-1) %>%
+      slice_max(order_by = estimate, n=8)
+  
+  all_mods <- bind_rows(all_mods, tidy)
+}
+
+# keep only positive coefs
+synergies <- 
+  all_mods %>%
+    filter(estimate > 0) %>%
+    select(card, term)
+
+# add back cards with no positive coefs
+tmp <- tibble(card = cards, term = NA)
+no_synergies <- anti_join(tmp, synergies, by = "card")  # get all cards not found in synergies df
+synergies <- bind_rows(synergies, no_synergies)
+```
+
+## Examine all_mods Coefficients
+
+```{r}
+all_mods %>%
+  ggplot(., aes(x = estimate)) +
+  geom_histogram()
+```
+
+## Save Graph to JSON
+
+***This is only an intermediate output, not the final one.***
+
+```{r}
+# json_df <-
+# synergies %>%
+#   group_by(card) %>%
+#   summarise(adjacent = list(term)) %>%
+#   ungroup() %>%
+#   column_to_rownames("card") %>%
+#   t() %>%
+#   as_tibble()
+# 
+# json <- toJSON(unbox(fromJSON(toJSON(json_df))))
+# json <- str_replace_all(json, "null", "")  # clean up [null]
+```
+
+```{r}
+# write(json, "graph_cond.json")
+```
+
+## iGraph Cliques
+
+The cliques will determine which interaction terms to include in a joint model.
+
+```{r}
+g <- graph_from_data_frame(synergies)
+plot(g)
+cliques(g, min = 2, max = 2)
+clique_out <- cliques(g, min = 2, max = 2)
+```
+
+## Extract Interaction Terms
+
+```{r}
+ints <-
+clique_out %>%
+  map(., function(clique) {
+    vertices <- as_ids(clique)
+    vertices <- vertices[vertices != "NA"]
+    if (length(vertices) == 1) {  # an interaction needs at least 2 terms
+      return(NULL)
+    } else {
+      return(paste(vertices, collapse = ":"))
+    }
+  }) %>%
+  unlist()
+```
+
+## Joint Model
+
+With select interaction terms.
+
+```{r}
+f <- paste(
+  "battlewon ~",
+  paste(cards, collapse = " + "),
+  " + ",
+  paste(ints, collapse = " + ")
+)
+
+# sub <- cr %>% slice(1:50000)  # temporary solution to reduce wait time
+
+mod_joint <- glm(f, data = sub, family = "binomial")
+```
+
+## Examine Model Coefs
+
+```{r}
+mod_joint %>%
+  tidy() %>%
+  ggplot(., aes(x = estimate)) +
+  geom_histogram() +
+  scale_x_continuous(limits = c(-5, 50))
+```
+
+## Get Positive Interaction Terms
+
+***This is the final graph***
+
+```{r}
+df_mod <- tidy(mod_joint)  # a data frame of model coefficients
+
+df_coef_positive <-
+  df_mod %>%
+    filter(str_detect(term, ":")) %>%
+    filter(estimate > 0) %>%
+    arrange(desc(estimate))
+
+int_cond_joint <- df_coef_positive$term  # a vector of interaction terms
+
+write(int_cond_joint, "int_lasso.txt")  # conditional joint model positive interactions
+```
+
+## Network
+
+Build an adjacency list that represents this graph (network).
+This will be done in Python.
