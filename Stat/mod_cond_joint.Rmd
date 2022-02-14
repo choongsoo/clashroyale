@@ -159,21 +159,21 @@ all_mods %>%
 ***This is only an intermediate output, not the final one.***
 
 ```{r}
-json_df <-
-synergies %>%
-  group_by(card) %>%
-  summarise(adjacent = list(term)) %>%
-  ungroup() %>%
-  column_to_rownames("card") %>%
-  t() %>%
-  as_tibble()
-
-json <- toJSON(unbox(fromJSON(toJSON(json_df))))
-json <- str_replace_all(json, "null", "")  # clean up [null]
+# json_df <-
+# synergies %>%
+#   group_by(card) %>%
+#   summarise(adjacent = list(term)) %>%
+#   ungroup() %>%
+#   column_to_rownames("card") %>%
+#   t() %>%
+#   as_tibble()
+# 
+# json <- toJSON(unbox(fromJSON(toJSON(json_df))))
+# json <- str_replace_all(json, "null", "")  # clean up [null]
 ```
 
 ```{r}
-write(json, "graph_cond.json")
+# write(json, "graph_cond.json")
 ```
 
 ## iGraph Cliques

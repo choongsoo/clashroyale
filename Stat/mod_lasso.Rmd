@@ -237,7 +237,7 @@ f <- paste(
 
 # sub <- cr %>% slice(1:50000)  # temporary solution to reduce wait time
 
-mod_joint <- glm(f, data = sub, family = "binomial")
+mod_joint <- glm(f, data = cr, family = "binomial")
 ```
 
 ## Examine Model Coefs

@@ -72,6 +72,7 @@
                 let id = card.name;
                 id = id.replaceAll(" ", "_");
                 id = id.replaceAll("-", "_");
+                id = id.replaceAll("\.", "_");
                 const obj = {};
                 obj[id] = { name: card.name, url: card.iconUrls.medium };
                 return obj;
