@@ -2,14 +2,14 @@
 **/.DS_Store
 
 # only track playground/shared folder
-*/playground/*
+*/playground/
 !*/playground/shared/
 
 # Visual Paradigm junk
 */*.vpp.*
 
 # only track api keys since they are not critical credentials
-*/credentials/*
+*/credentials/
 !*/credentials/api_keys.json
 
 # pychache
@@ -20,3 +20,9 @@
 
 # R
 **/.Rhistory
+**/rsconnect/
+
+# only keep track of one sample dataset for record
+# ignore all csv files in sample directory except the one
+**/sample/*.csv
+!*/sample/clash_sample_100k.csv
