@@ -315,6 +315,8 @@
                 return mainIntersectCurr.length / mainAdjVertices.length >= 2 / 3;
             });
 
+            similarEgos.sort();
+
             // those similar egos will be the options for select-similar
             similarEgos
                 .map(vertex => vertexCardMap[vertex])
