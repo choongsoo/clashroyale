@@ -26,3 +26,6 @@
 # ignore all csv files in sample directory except the one
 **/sample/*.csv
 !*/sample/clash_sample_100k.csv
+
+# don't upload .rds files
+**/*.rds

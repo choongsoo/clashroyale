@@ -238,9 +238,19 @@ f <- paste(
 # sub <- cr %>% slice(1:50000)  # temporary solution to reduce wait time
 
 mod_joint <- glm(f, data = cr, family = "binomial")
+
+saveRDS(mod_joint, "mod_joint.rds")
 ```
 
 ## Examine Model Coefs
+
+Load up saved model rds
+
+```{r}
+mod_joint <- readRDS("mod_joint.rds")
+```
+
+Histogram
 
 ```{r}
 mod_joint %>%
@@ -248,6 +258,22 @@ mod_joint %>%
   ggplot(., aes(x = estimate)) +
   geom_histogram() +
   scale_x_continuous(limits = c(-5, 50))
+```
+
+How many interaction terms are actually significant in the joint model?
+
+```{r}
+mod_joint %>%
+  tidy() %>%
+  filter(str_detect(term, ":")) %>%
+  filter(estimate > 0) %>%
+  arrange(desc(estimate)) %>%
+  mutate(  # calculate percentage of coef with p-value < 0.05
+    significant = if_else(p.value < 0.05, 1, 0)
+  ) %>%
+  summarise(
+    percent_significant_coef = sum(significant) / n()
+  )
 ```
 
 ## Get Positive Interaction Terms
