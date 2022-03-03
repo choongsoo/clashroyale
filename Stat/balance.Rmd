@@ -1,0 +1,160 @@
+---
+title: "Balanced Training Set"
+author: "Siyuan (Tom) Zhang"
+date: "3/2/2022"
+output: html_document
+---
+
+## Transform Data Into Indicator Format
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(broom)
+library(jsonlite)
+library(igraph)
+library(purrr)
+library(glmnet)
+
+clash <- read_csv("sample/clash_sample_500k.csv", 
+    col_types = cols(battleid = col_character(), 
+        playertag = col_character(), battletime = col_datetime(format = "%Y-%m-%d %H:%M:%S"), 
+        type = col_character(), isladdertournament = col_logical(), 
+        arenaid = col_number(), arena = col_character(), 
+        gamemodeid = col_number(), gamemode = col_character(), 
+        deckselection = col_character(), 
+        team = col_logical(), card = col_character(), 
+        cardlevel = col_number(), clantag = col_character(), 
+        startingtrophies = col_number(), 
+        trophychange = col_number(), crowns = col_number(), 
+        princesstower1hitpoints = col_number(), 
+        princesstower2hitpoints = col_number(), 
+        kingtowerhitpoints = col_number(), 
+        boatbattleside = col_character(), 
+        boatbattlewon = col_logical(), newboattowersdestroyed = col_number(), 
+        prevboattowersdestroyed = col_number(), 
+        remainingboattowers = col_number()))
+
+clash <-
+clash %>%
+  mutate(card = str_replace(card, "^Fire Spirits$", "Fire Spirit")) %>%
+  mutate(card = str_replace(card, "^Heal$", "Heal Spirit"))
+
+clash <-
+clash %>%
+  filter(!str_starts(card, "(left)|(right)"))
+
+# a matrix of card indicators
+x <- model.matrix(~0 + card + cardlevel, model.frame(~ ., clash, na.action=na.pass))
+
+# clean up col names
+colnames(x) <- str_remove_all(colnames(x), "card")
+colnames(x) <- str_replace_all(colnames(x), " ", "_")
+colnames(x) <- str_replace_all(colnames(x), "-", "_")
+colnames(x) <- str_replace_all(colnames(x), "\\.", "_")
+
+# save a copy of just card indicators
+card_indicators <- x[, -ncol(x)]
+
+# ignore levels for now
+
+# # transform card levels into the same structure of card indicators
+# card_levels = sweep(x[,-ncol(x)], MARGIN = 1, STATS = x[,ncol(x)], FUN = "*")
+# 
+# # make col names for card levels
+# colnames(card_levels) = paste(colnames(card_levels),"_Level",sep = "")
+
+# create names for all card and card interaction terms to be used later
+interactions <- labels(terms(~ .^2, data = x[1:10, -ncol(x)]))
+
+rm(x)  # free up memory
+
+# put all columns together
+cr <-
+  # cbind(card_indicators, card_levels) %>%
+  card_indicators %>%
+  as_tibble() %>%
+  mutate(battleid = clash$battleid,
+         playertag = clash$playertag,
+         battlewon = clash$trophychange) %>%
+  group_by(battleid, playertag) %>%
+  summarize_if(is.numeric, sum) %>%
+  ungroup() %>%
+  mutate(battlewon = if_else(battlewon >= 0 | is.na(battlewon), 1, 0))  # convert NA to 1
+
+rm(clash)  # free up memory
+rm(card_indicators)
+
+cr
+```
+
+## Card Counts in Dataset
+
+```{r}
+tibble(card = names(cr[,3:(ncol(cr) - 1)]),
+       count = colSums(cr[,3:(ncol(cr) - 1)])) %>%
+  ggplot(., aes(x = count, y = card)) +
+  geom_col()
+```
+
+## Balance Card Counts
+
+Idea:
+* Identify cards below the threshold: median
+* Go through dataset by row
+  - If current row contains enough above-median cards, remove it (or record row index in a list)
+  - Update the two sets of cards separated by median threshold
+
+```{r}
+card_counts <- colSums(cr[3:(ncol(cr) - 1)])
+median <- median(card_counts)
+idx_to_remove <- NULL
+
+for (i in 1:nrow(cr)) {
+  row <- cr[i,]
+  deck <- names(row)[which(row == 1)][-9]  # extract cards used in this row
+  
+  above_median_cards <- names(card_counts[card_counts > median])
+  row_removed <- FALSE
+  # if all 8 cards are have above-median counts
+  if (sum(deck %in% above_median_cards) >= 8) {
+    idx_to_remove <- c(idx_to_remove, i)
+    row_removed <- TRUE
+  }
+  
+  # update threshold
+  if (row_removed) {
+    # decrement card_counts by 1 for cards in current deck
+    card_counts <- sapply(names(card_counts), function(card) {
+      if (card %in% deck) {
+        return(card_counts[[card]] - 1)
+      } else {
+        return(card_counts[[card]])
+      }
+    })
+    # recalculate median
+    median <- median(card_counts)
+  }
+}
+```
+
+## Undersampling
+
+```{r}
+cr1 <- cr[-idx_to_remove,]
+```
+
+## Outcome
+
+```{r}
+print(paste("Proportion of rows removed:", length(idx_to_remove) / nrow(cr)))
+```
+
+## Card Counts in Rebalanced Dataset
+
+```{r}
+tibble(card = names(cr1[,3:(ncol(cr1) - 1)]),
+       count = colSums(cr1[,3:(ncol(cr1) - 1)])) %>%
+  ggplot(., aes(x = count, y = card)) +
+  geom_col()
+```
+
