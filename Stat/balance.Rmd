@@ -158,3 +158,10 @@ tibble(card = names(cr1[,3:(ncol(cr1) - 1)]),
   geom_col()
 ```
 
+
+
+
+
+
+
+## TODO: repeat the process; keep trimming the dataset until true balance is achieved.
