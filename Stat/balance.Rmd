@@ -14,6 +14,8 @@ library(jsonlite)
 library(igraph)
 library(purrr)
 library(glmnet)
+library(lubridate)
+library(magrittr)
 
 clash <- read_csv("sample/clash_sample_500k.csv", 
     col_types = cols(battleid = col_character(), 
@@ -75,7 +77,8 @@ cr <-
   as_tibble() %>%
   mutate(battleid = clash$battleid,
          playertag = clash$playertag,
-         battlewon = clash$trophychange) %>%
+         battlewon = clash$trophychange,
+         battletime = clash$battletime) %>%
   group_by(battleid, playertag) %>%
   summarize_if(is.numeric, sum) %>%
   ungroup() %>%
@@ -158,10 +161,395 @@ tibble(card = names(cr1[,3:(ncol(cr1) - 1)]),
   geom_col()
 ```
 
+## lasso part - same procedures
+
+```{r}
+cr_original <- cr
+cr <- cr1
+
+
+
+# get card name columns
+cards <- names(cr)[3:(ncol(cr) - 1)]
+
+# a place to store coefficients of every conditional model
+# card = main card, term = all other cards, estimate = coef; exclude intercept
+all_mods <- tibble(card = NA, term = NA, estimate = NA)
+
+for (i in 1:length(cards)) {
+  card <- cards[i]
+  
+  # subset data
+  sub <- filter(cr, !!as.symbol(card) == 1)
+  
+  # response var and predictor matrix
+  y <- sub$battlewon
+  x <- data.matrix(sub[, cards[! cards %in% card]])  # all other cards
+  
+  # perform k-fold cross-validation to find optimal lambda value
+  # note: this does not work if response is constant - problem with small datasets
+  cv_model <- cv.glmnet(x, y, alpha = 1)
+  
+  # find optimal lambda value that minimizes test MSE
+  best_lambda <- cv_model$lambda.min
+  
+  # find coefficients of best model
+  mod <- glmnet(x, y, alpha = 1, lambda = best_lambda)
+  
+  tidy <-
+    mod %>%
+      tidy() %>%
+      mutate(card = card) %>%
+      select(card, term, estimate) %>%
+      slice(-1) %>%
+      slice_max(order_by = estimate, n=8)
+  
+  all_mods <- bind_rows(all_mods, tidy)
+}
+
+# keep only positive coefs
+synergies <- 
+  all_mods %>%
+    filter(estimate > 0) %>%
+    select(card, term)
+
+# add back cards with no positive coefs
+tmp <- tibble(card = cards, term = NA)
+no_synergies <- anti_join(tmp, synergies, by = "card")  # get all cards not found in synergies df
+# synergies <- bind_rows(synergies, no_synergies)
+
+
+
+g <- graph_from_data_frame(synergies)
+# plot(g)
+# cliques(g, min = 2, max = 2)
+clique_out <- cliques(g, min = 2, max = 2)
+
+
+
+ints <-
+clique_out %>%
+  map(., function(clique) {
+    vertices <- as_ids(clique)
+    vertices <- vertices[vertices != "NA"]
+    if (length(vertices) == 1) {  # an interaction needs at least 2 terms
+      return(NULL)
+    } else {
+      return(paste(vertices, collapse = ":"))
+    }
+  }) %>%
+  unlist()
+
+
+
+f <- paste(
+  "battlewon ~",
+  paste(cards, collapse = " + "),
+  " + ",
+  paste(ints, collapse = " + ")
+)
+
+# sub <- cr %>% slice(1:50000)  # temporary solution to reduce wait time
+t1 <- Sys.time()
+mod_joint <- glm(f, data = cr, family = "binomial")
+t2 <- Sys.time()
+
+saveRDS(mod_joint, "mod_joint_b.rds")
+
+
+
+mod_joint <- readRDS("mod_joint_b.rds")
+
+
+
+mod_joint %>%
+  tidy() %>%
+  filter(str_detect(term, ":")) %>%
+  filter(estimate > 0) %>%
+  arrange(desc(estimate)) %>%
+  mutate(  # calculate percentage of coef with p-value < 0.05
+    significant = if_else(p.value < 0.05, 1, 0)
+  ) %>%
+  summarise(
+    percent_significant_coef = sum(significant) / n()
+  )
+```
 
 
 
 
 
 
-## TODO: repeat the process; keep trimming the dataset until true balance is achieved.
+
+
+## TODO compare across seasons
+
+Add in battle time
+
+```{r}
+clash <- read_csv("sample/clash_sample_2mm.csv", 
+    col_types = cols(battleid = col_character(), 
+        playertag = col_character(), battletime = col_datetime(format = "%Y-%m-%d %H:%M:%S"), 
+        type = col_character(), isladdertournament = col_logical(), 
+        arenaid = col_number(), arena = col_character(), 
+        gamemodeid = col_number(), gamemode = col_character(), 
+        deckselection = col_character(), 
+        team = col_logical(), card = col_character(), 
+        cardlevel = col_number(), clantag = col_character(), 
+        startingtrophies = col_number(), 
+        trophychange = col_number(), crowns = col_number(), 
+        princesstower1hitpoints = col_number(), 
+        princesstower2hitpoints = col_number(), 
+        kingtowerhitpoints = col_number(), 
+        boatbattleside = col_character(), 
+        boatbattlewon = col_logical(), newboattowersdestroyed = col_number(), 
+        prevboattowersdestroyed = col_number(), 
+        remainingboattowers = col_number()))
+
+clash <-
+clash %>%
+  mutate(card = str_replace(card, "^Fire Spirits$", "Fire Spirit")) %>%
+  mutate(card = str_replace(card, "^Heal$", "Heal Spirit"))
+
+clash <-
+clash %>%
+  filter(!str_starts(card, "(left)|(right)"))
+
+# a matrix of card indicators
+x <- model.matrix(~0 + card + cardlevel, model.frame(~ ., clash, na.action=na.pass))
+
+# clean up col names
+colnames(x) <- str_remove_all(colnames(x), "card")
+colnames(x) <- str_replace_all(colnames(x), " ", "_")
+colnames(x) <- str_replace_all(colnames(x), "-", "_")
+colnames(x) <- str_replace_all(colnames(x), "\\.", "_")
+
+# save a copy of just card indicators
+card_indicators <- x[, -ncol(x)]
+
+# ignore levels for now
+
+# # transform card levels into the same structure of card indicators
+# card_levels = sweep(x[,-ncol(x)], MARGIN = 1, STATS = x[,ncol(x)], FUN = "*")
+# 
+# # make col names for card levels
+# colnames(card_levels) = paste(colnames(card_levels),"_Level",sep = "")
+
+# create names for all card and card interaction terms to be used later
+interactions <- labels(terms(~ .^2, data = x[1:10, -ncol(x)]))
+
+rm(x)  # free up memory
+
+# put all columns together
+cr_time <-
+  card_indicators %>%
+  as_tibble() %>%
+  mutate(battleid = clash$battleid,
+         playertag = clash$playertag,
+         battlewon = clash$trophychange,
+         battletime = clash$battletime) %>%
+  group_by(battleid, playertag, battletime) %>%
+  summarize_if(is.numeric, sum) %>%
+  ungroup() %>%
+  mutate(battlewon = if_else(battlewon >= 0 | is.na(battlewon), 1, 0))
+
+rm(clash)  # free up memory
+rm(card_indicators)
+```
+
+Identify consecutive seasons with good amounts of data
+
+```{r}
+cr_time %>%
+  mutate(year = year(battletime),
+         month = month(battletime)) %>%
+  unite("ym", year, month, sep = "-", remove = F) %>%
+  select(year, month, ym) %>%
+  group_by(ym) %>%
+  summarise(
+    n = n()
+  ) %>%
+  ungroup() %>%
+  arrange(desc(n))
+```
+
+Subset those seasons
+
+```{r}
+cr_time <-
+cr_time %>%
+  mutate(year = year(battletime),
+         month = month(battletime)) %>%
+  unite("ym", year, month, sep = "-")
+```
+
+```{r}
+cr_2019_6 <- filter(cr_time, ym == "2019-6") %>% select(-battletime, -ym)
+cr_2019_7 <- filter(cr_time, ym == "2019-7") %>% select(-battletime, -ym)
+cr_2019_8 <- filter(cr_time, ym == "2019-8") %>% select(-battletime, -ym)
+cr_2019_9 <- filter(cr_time, ym == "2019-9") %>% select(-battletime, -ym)
+cr_2019_10 <- filter(cr_time, ym == "2019-10") %>% select(-battletime, -ym)
+cr_2019_11 <- filter(cr_time, ym == "2019-11") %>% select(-battletime, -ym)
+cr_2019_12 <- filter(cr_time, ym == "2019-12") %>% select(-battletime, -ym)
+```
+
+For each season:
+Fit conditional models -> get interaction terms -> fit joint model
+
+```{r}
+reduce <- function(cr) {
+  card_counts <- colSums(cr[3:(ncol(cr) - 1)])
+  median <- median(card_counts)
+  idx_to_remove <- NULL
+  
+  for (i in 1:nrow(cr)) {
+    row <- cr[i,]
+    deck <- names(row)[which(row == 1)][-9]  # extract cards used in this row
+    
+    above_median_cards <- names(card_counts[card_counts > median])
+    row_removed <- FALSE
+    # if all 8 cards are have above-median counts
+    if (sum(deck %in% above_median_cards) >= 8) {
+      idx_to_remove <- c(idx_to_remove, i)
+      row_removed <- TRUE
+    }
+    
+    # update threshold
+    if (row_removed) {
+      # decrement card_counts by 1 for cards in current deck
+      card_counts <- sapply(names(card_counts), function(card) {
+        if (card %in% deck) {
+          return(card_counts[[card]] - 1)
+        } else {
+          return(card_counts[[card]])
+        }
+      })
+      # recalculate median
+      median <- median(card_counts)
+    }
+  }
+  
+  
+  
+  cr1 <- cr[-idx_to_remove,]
+  
+  
+  
+  print(paste("Proportion of rows removed:", length(idx_to_remove) / nrow(cr)))
+  
+  
+  
+  cr_original <- cr
+  cr <- cr1
+  
+  
+  
+  # get card name columns
+  cards <- names(cr)[3:(ncol(cr) - 1)]
+  
+  # a place to store coefficients of every conditional model
+  # card = main card, term = all other cards, estimate = coef; exclude intercept
+  all_mods <- tibble(card = NA, term = NA, estimate = NA)
+  
+  for (i in 1:length(cards)) {
+    card <- cards[i]
+    
+    # subset data
+    sub <- filter(cr, !!as.symbol(card) == 1)
+    
+    # response var and predictor matrix
+    y <- sub$battlewon
+    x <- data.matrix(sub[, cards[! cards %in% card]])  # all other cards
+    
+    # perform k-fold cross-validation to find optimal lambda value
+    # note: this does not work if response is constant - problem with small datasets
+    cv_model <- cv.glmnet(x, y, alpha = 1)
+    
+    # find optimal lambda value that minimizes test MSE
+    best_lambda <- cv_model$lambda.min
+    
+    # find coefficients of best model
+    mod <- glmnet(x, y, alpha = 1, lambda = best_lambda)
+    
+    tidy <-
+      mod %>%
+        tidy() %>%
+        mutate(card = card) %>%
+        select(card, term, estimate) %>%
+        slice(-1) %>%
+        slice_max(order_by = estimate, n=8)
+    
+    all_mods <- bind_rows(all_mods, tidy)
+  }
+  
+  # keep only positive coefs
+  synergies <- 
+    all_mods %>%
+      filter(estimate > 0) %>%
+      select(card, term)
+  
+  # add back cards with no positive coefs
+  tmp <- tibble(card = cards, term = NA)
+  no_synergies <- anti_join(tmp, synergies, by = "card")  # get all cards not found in synergies df
+  # synergies <- bind_rows(synergies, no_synergies)
+  
+  
+  
+  g <- graph_from_data_frame(synergies)
+  # plot(g)
+  # cliques(g, min = 2, max = 2)
+  clique_out <- cliques(g, min = 2, max = 2)
+  
+  
+  
+  ints <-
+  clique_out %>%
+    map(., function(clique) {
+      vertices <- as_ids(clique)
+      vertices <- vertices[vertices != "NA"]
+      if (length(vertices) == 1) {  # an interaction needs at least 2 terms
+        return(NULL)
+      } else {
+        return(paste(vertices, collapse = ":"))
+      }
+    }) %>%
+    unlist()
+  
+  
+  
+  f <- paste(
+    "battlewon ~",
+    paste(cards, collapse = " + "),
+    " + ",
+    paste(ints, collapse = " + ")
+  )
+  
+  # sub <- cr %>% slice(1:50000)  # temporary solution to reduce wait time
+  t1 <- Sys.time()
+  mod_joint <- glm(f, data = cr, family = "binomial")
+  t2 <- Sys.time()
+  
+  
+  
+  mod_joint %>%
+    tidy() %>%
+    filter(str_detect(term, ":")) %>%
+    filter(estimate > 0) %>%
+    arrange(desc(estimate)) %>%
+    mutate(  # calculate percentage of coef with p-value < 0.05
+      significant = if_else(p.value < 0.05, 1, 0)
+    ) %>%
+    summarise(
+      percent_significant_coef = sum(significant) / n()
+    ) %>%
+    use_series(percent_significant_coef) %>%
+    print()
+}
+```
+
+```{r}
+for (i in 6:12) {
+  print(paste0("cr_2019_", i))
+  reduce(eval(parse(text = paste0("cr_2019_", i))))
+}
+```
