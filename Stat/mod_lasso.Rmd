@@ -43,9 +43,7 @@ clash <- read_csv("sample/clash_sample_500k.csv",
 #   slice(1:32000)  # use a small subset first: ~ 4000 decks
 ```
 
-Slight issue: At some point, a few card names has been changed; now both copies are in the database.
-* Fire Spirits -> Fire Spirit
-* Heal -> Heal Spirit
+Slight issue: At some point, a few card names has been changed; now both copies are in the database. \* Fire Spirits -\> Fire Spirit \* Heal -\> Heal Spirit
 
 ```{r}
 clash <-
@@ -61,7 +59,6 @@ clash <-
 clash %>%
   filter(!str_starts(card, "(left)|(right)"))
 ```
-
 
 ## Data Wrangling
 
@@ -237,7 +234,21 @@ f <- paste(
 
 # sub <- cr %>% slice(1:50000)  # temporary solution to reduce wait time
 
-mod_joint <- glm(f, data = cr, family = "binomial")
+# mod_joint <- glm(f, data = cr, family = "binomial")
+
+# make predictor matrix
+y <- cr$battlewon
+df <- cr[,-c(1, 2)]  # keep cards & battlewon (response)
+x <- model.matrix(as.formula(f), data = df)[,-1]  # x matrix for glmnet()
+
+# perform k-fold cross-validation to find optimal lambda value
+cv_model <- cv.glmnet(x, y, alpha = 1)
+
+# find optimal lambda value that minimizes test MSE
+best_lambda <- cv_model$lambda.min
+
+# find coefficients of best model
+mod_joint <- glmnet(x, y, alpha = 1, lambda = best_lambda)
 
 saveRDS(mod_joint, "mod_joint.rds")
 ```
@@ -296,5 +307,4 @@ write(int_cond_joint, "int_lasso.txt")  # conditional joint model positive inter
 
 ## Network
 
-Build an adjacency list that represents this graph (network).
-This will be done in Python.
+Build an adjacency list that represents this graph (network). This will be done in Python.

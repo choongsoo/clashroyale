@@ -117,9 +117,7 @@ card_weights
 
 ## Training Data Weights
 
-Each row (match) in training dataset gets a weight:
-match weight = sqrt(sum(weights of cards used in match))
-Match weights will be stored as row names.
+Each row (match) in training dataset gets a weight: match weight = sqrt(sum(weights of cards used in match)) Match weights will be stored as row names.
 
 ```{r warning=FALSE}
 # runtime ~ 15 min
@@ -141,6 +139,8 @@ rownames(cr) <- row_names
 ```
 
 ## lasso part - same procedures, but specify weight option in glmnet()
+
+***Also, joint model should use glmnet(), not glm()***
 
 ```{r}
 # get card name columns
@@ -223,10 +223,34 @@ f <- paste(
   " + ",
   paste(ints, collapse = " + ")
 )
+```
 
-# sub <- cr %>% slice(1:50000)  # temporary solution to reduce wait time
+Joint model - glmnet()
+
+```{r}
 t1 <- Sys.time()
-mod_joint <- glm(f, data = cr, family = "binomial")
+
+
+
+# make predictor matrix
+y <- cr$battlewon
+df <- cr[,-c(1, 2)]  # keep cards & battlewon (response)
+x <- model.matrix(as.formula(f), data = df)[,-1]  # x matrix for glmnet()
+
+# get weights
+weights <- str_remove(rownames(cr), ".*,") %>% as.numeric()
+
+# perform k-fold cross-validation to find optimal lambda value
+cv_model <- cv.glmnet(x, y, alpha = 1, weights = weights)
+
+# find optimal lambda value that minimizes test MSE
+best_lambda <- cv_model$lambda.min
+
+# find coefficients of best model
+mod_joint <- glmnet(x, y, alpha = 1, lambda = best_lambda, weights = weights)
+
+
+
 t2 <- Sys.time()
 
 saveRDS(mod_joint, "mod_joint_w.rds")
@@ -280,3 +304,49 @@ mod_joint_o %>%
 mod_joint_w %>%
   tidy()
 ```
+
+```{r}
+mod_joint_o %>%
+  tidy() %>%
+  filter(str_detect(term, ":")) %>%
+  filter(estimate > 0) %>%
+  arrange(desc(estimate)) %>%
+  mutate(  # calculate percentage of coef with p-value < 0.05
+    significant = if_else(estimate < 0.05, 1, 0)
+  ) %>%
+  summarise(
+    percent_significant_coef = sum(significant) / n()
+  )
+```
+
+```{r}
+mod_joint_w %>%
+  tidy() %>%
+  filter(str_detect(term, ":")) %>%
+  filter(estimate > 0) %>%
+  arrange(desc(estimate)) %>%
+  mutate(  # calculate percentage of coef with p-value < 0.05
+    significant = if_else(estimate < 0.05, 1, 0)
+  ) %>%
+  summarise(
+    percent_significant_coef = sum(significant) / n()
+  )
+```
+
+
+```{r}
+mod_joint_o %>%
+  tidy() %>%
+  ggplot(., aes(x = estimate)) +
+  geom_histogram() +
+  scale_x_continuous(limits = c(-1e-01, 1e-01))
+```
+
+
+```{r}
+mod_joint_w %>%
+  tidy() %>%
+  ggplot(., aes(x = sign(estimate))) +
+  geom_histogram()
+```
+
