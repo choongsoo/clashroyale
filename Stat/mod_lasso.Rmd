@@ -159,7 +159,7 @@ synergies <-
 # add back cards with no positive coefs
 tmp <- tibble(card = cards, term = NA)
 no_synergies <- anti_join(tmp, synergies, by = "card")  # get all cards not found in synergies df
-synergies <- bind_rows(synergies, no_synergies)
+# synergies <- bind_rows(synergies, no_synergies)
 ```
 
 ## Examine all_mods Coefficients
@@ -198,8 +198,8 @@ The cliques will determine which interaction terms to include in a joint model.
 
 ```{r}
 g <- graph_from_data_frame(synergies)
-plot(g)
-cliques(g, min = 2, max = 2)
+# plot(g)
+# cliques(g, min = 2, max = 2)
 clique_out <- cliques(g, min = 2, max = 2)
 ```
 
@@ -268,23 +268,17 @@ mod_joint %>%
   tidy() %>%
   ggplot(., aes(x = estimate)) +
   geom_histogram() +
-  scale_x_continuous(limits = c(-5, 50))
+  scale_x_continuous(limits = c(-0.1, 0.1))
 ```
 
-How many interaction terms are actually significant in the joint model?
+How many interaction terms are zeroed out in joint model?
 
 ```{r}
 mod_joint %>%
   tidy() %>%
   filter(str_detect(term, ":")) %>%
-  filter(estimate > 0) %>%
-  arrange(desc(estimate)) %>%
-  mutate(  # calculate percentage of coef with p-value < 0.05
-    significant = if_else(p.value < 0.05, 1, 0)
-  ) %>%
-  summarise(
-    percent_significant_coef = sum(significant) / n()
-  )
+  mutate(zero = if_else(abs(estimate) < 0.01, 1, 0)) %>%
+  summarise(percent_zero = sum(zero) / n())
 ```
 
 ## Get Positive Interaction Terms

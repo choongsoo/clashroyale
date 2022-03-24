@@ -263,90 +263,38 @@ mod_joint_o <- readRDS("mod_joint.rds")
 mod_joint_w <- readRDS("mod_joint_w.rds")
 ```
 
-Percentage of significant interaction terms in both joint models
+Percentage of zeroed out predictors in both joint models
 
 ```{r}
 mod_joint_o %>%
   tidy() %>%
   filter(str_detect(term, ":")) %>%
-  filter(estimate > 0) %>%
-  arrange(desc(estimate)) %>%
-  mutate(  # calculate percentage of coef with p-value < 0.05
-    significant = if_else(p.value < 0.05, 1, 0)
-  ) %>%
-  summarise(
-    percent_significant_coef = sum(significant) / n()
-  )
+  mutate(zero = if_else(abs(estimate) < 0.05, 1, 0)) %>%
+  summarise(percent_zero = sum(zero) / n())
 ```
 
 ```{r}
 mod_joint_w %>%
   tidy() %>%
   filter(str_detect(term, ":")) %>%
-  filter(estimate > 0) %>%
-  arrange(desc(estimate)) %>%
-  mutate(  # calculate percentage of coef with p-value < 0.05
-    significant = if_else(p.value < 0.05, 1, 0)
-  ) %>%
-  summarise(
-    percent_significant_coef = sum(significant) / n()
-  )
+  mutate(zero = if_else(abs(estimate) < 0.05, 1, 0)) %>%
+  summarise(percent_zero = sum(zero) / n())
 ```
-
-Display model coefficients
-
-```{r}
-mod_joint_o %>%
-  tidy()
-```
-
-```{r}
-mod_joint_w %>%
-  tidy()
-```
-
-```{r}
-mod_joint_o %>%
-  tidy() %>%
-  filter(str_detect(term, ":")) %>%
-  filter(estimate > 0) %>%
-  arrange(desc(estimate)) %>%
-  mutate(  # calculate percentage of coef with p-value < 0.05
-    significant = if_else(estimate < 0.05, 1, 0)
-  ) %>%
-  summarise(
-    percent_significant_coef = sum(significant) / n()
-  )
-```
-
-```{r}
-mod_joint_w %>%
-  tidy() %>%
-  filter(str_detect(term, ":")) %>%
-  filter(estimate > 0) %>%
-  arrange(desc(estimate)) %>%
-  mutate(  # calculate percentage of coef with p-value < 0.05
-    significant = if_else(estimate < 0.05, 1, 0)
-  ) %>%
-  summarise(
-    percent_significant_coef = sum(significant) / n()
-  )
-```
-
 
 ```{r}
 mod_joint_o %>%
   tidy() %>%
   ggplot(., aes(x = estimate)) +
   geom_histogram() +
-  scale_x_continuous(limits = c(-1e-01, 1e-01))
+  scale_x_continuous(limits = c(-0.05, 0.05))
 ```
 
 
 ```{r}
 mod_joint_w %>%
   tidy() %>%
-  ggplot(., aes(x = sign(estimate))) +
-  geom_histogram()
+  ggplot(., aes(x = estimate)) +
+  geom_histogram() +
+  scale_x_continuous(limits = c(-0.05, 0.05))
 ```
 
