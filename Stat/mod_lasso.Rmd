@@ -286,19 +286,40 @@ mod_joint %>%
 ***This is the final graph***
 
 ```{r}
-df_mod <- tidy(mod_joint)  # a data frame of model coefficients
-
-df_coef_positive <-
-  df_mod %>%
-    filter(str_detect(term, ":")) %>%
-    filter(estimate > 0) %>%
-    arrange(desc(estimate))
-
-int_cond_joint <- df_coef_positive$term  # a vector of interaction terms
-
-write(int_cond_joint, "int_lasso.txt")  # conditional joint model positive interactions
+df_ints_positive <-
+tidy(mod_joint) %>%
+  filter(str_detect(term, ":")) %>%
+  filter(estimate > 0) %>%
+  arrange(desc(estimate)) %>%
+  separate(term, c("term1", "term2"), sep = ":")
 ```
 
 ## Network
 
-Build an adjacency list that represents this graph (network). This will be done in Python.
+Build an adjacency list that represents this weighted graph.
+
+```{r}
+graph <- list()
+graph[["adj"]] = list()
+graph[["wgt"]] = list()
+
+for (i in 1:nrow(df_ints_positive)) {
+  card1 <- df_ints_positive$term1[i]
+  card2 <- df_ints_positive$term2[i]
+  weight <- df_ints_positive$estimate[i]
+  
+  graph[["adj"]][[card1]] <- append(graph[["adj"]][[card1]], card2)
+  graph[["adj"]][[card2]] <- append(graph[["adj"]][[card2]], card1)
+  
+  graph[["wgt"]][[paste0(card1, ":", card2)]] <- unbox(weight)
+  graph[["wgt"]][[paste0(card2, ":", card1)]] <- unbox(weight)
+}
+```
+
+## Save Weighted Graph to JSON
+
+```{r}
+json <- toJSON(graph)
+write(json, file = "graph_lasso.json")
+```
+

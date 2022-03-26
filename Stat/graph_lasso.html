@@ -81,7 +81,8 @@
 
             // read in graph json
             const graphResp = await fetch("graph_lasso.json?0");
-            const graph = await graphResp.json();
+            let weightedGraph = await graphResp.json();
+            graph = weightedGraph.adj
 
             // transform graph data into D3-compliant format
             const vertices = Object.keys(graph),

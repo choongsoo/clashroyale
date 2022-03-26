@@ -141,7 +141,8 @@
 
             // read in graph json
             const graphResp = await fetch("graph_lasso.json?0");
-            let graph = await graphResp.json();
+            const weightedGraph = await graphResp.json();
+            let graph = weightedGraph.adj;
 
             // build ego network if specified
             if (ego) {
@@ -387,7 +388,8 @@
 
                 // cards in the graph
                 const graphResp = await fetch("graph_lasso.json?0");
-                const graph = await graphResp.json();
+                const weightedGraph = await graphResp.json();
+                const graph = weightedGraph.adj;
                 const graphVertices = Object.keys(graph);
 
                 // only keep names for cards that exist in the graph
