@@ -323,3 +323,7 @@ json <- toJSON(graph)
 write(json, file = "graph_lasso.json")
 ```
 
+## Clustergram
+
+A clustergram (heatmap + hierarchical clustering dendrogram) will be produced with a Python script.
+See clustergram.py
