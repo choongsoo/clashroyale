@@ -5,7 +5,7 @@ import plotly
 
 
 # read in weighted graph
-with open("graph_lasso.json") as f:
+with open("graph_lasso_0.001.json") as f:
     weighted_graph = json.load(f)
 
 weights = weighted_graph["wgt"]
@@ -37,6 +37,10 @@ for card1 in cards:
 # clustergram
 clustergram = dashbio.Clustergram(
     data=np.array(matrix),
+    # row_dist=lambda u, v: np.sqrt(((u-v)**2).sum()),
+    # col_dist=lambda u, v: np.sqrt(((u-v)**2).sum()),
+    row_dist="jaccard",
+    col_dist="jaccard",
     row_labels=cards,
     column_labels=cards,
     height=1300,

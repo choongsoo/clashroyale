@@ -149,9 +149,11 @@
             const allCards = cardsArray.reduce(((r, c) => Object.assign(r, c)), {});
 
             // read in graph json
-            const graphResp = await fetch("graph_lasso.json?0");
+            const graphResp = await fetch("graph_lasso_0.001.json?0");
             const weightedGraph = await graphResp.json();
             let graph = weightedGraph.adj;
+            const weights = weightedGraph.wgt;
+            const maxWeight = Math.max(...Object.values(weights));
 
             // build ego network if specified
             if (ego) {
@@ -178,7 +180,11 @@
                 }),
                 links = d3.merge(vertices.map(source => {
                     return graph[source].map(target => {
-                        return { source: source, target: target };
+                        return {
+                            source: source,
+                            target: target,
+                            weight: weights[source + ":" + target] / maxWeight * 30 // quantile, standardize
+                        };
                     });
                 }));
 
@@ -187,7 +193,7 @@
             const forceLink = d3.forceLink(links).id(({ index: i }) => vertices[i]);
 
             // note: full graph and ego network nodes have different charges
-            let distance = 200, strength = -100;
+            let distance = 200, strength = -150;
             if (ego) { distance = 100; strength = -1000; }
 
             const simulation = d3.forceSimulation(nodes)
@@ -210,10 +216,11 @@
 
             const link = svg.append("g")
                 .attr("stroke", "#ccc")
-                .attr("stroke-width", 1.5)
+                // .attr("stroke-width", 1.5)
                 .selectAll("line")
                 .data(links)
                 .join("line")
+                .attr("stroke-width", d => d.weight) // edge width by synergy strength
                 .attr("class", d => makeEdgeId(d.source.id, d.target.id));
             // note: using class instead of id because edges contain duplicates
 
@@ -316,7 +323,7 @@
                 .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
             // read the data
-            const graphResp = await fetch("graph_lasso.json?0");
+            const graphResp = await fetch("graph_lasso_0.001.json?0");
             const weightedGraph = await graphResp.json();
             const weights = weightedGraph.wgt;
 
@@ -465,7 +472,7 @@
     <script>
         async function insertClustergram() {
             // read in div text file
-            const clustDivResp = await fetch("clustergram_div.txt");
+            const clustDivResp = await fetch("clustergram_div.txt?0");
             const clustDivText = await clustDivResp.text();
 
             // extract plotly div and script content
@@ -520,13 +527,13 @@
             const mainAdjVertices = mainAdjCards.map(card => cleanUpName(card));
 
             // iterate through graph (adjacency list) to identify all similar ego cards
-            // threshold: having at least 2/3 of the same adjacent cards
+            // threshold: having at least 1/2 of the same adjacent cards
             const similarEgos = graphVertices.filter(vertex => {
                 const currAdjVertices = graph[vertex];
                 // set intersection
                 const mainIntersectCurr = mainAdjVertices.filter(v => currAdjVertices.includes(v));
                 // if similarity size exceeds threshould, filter keeps it
-                return mainIntersectCurr.length / mainAdjVertices.length >= 2 / 3;
+                return mainIntersectCurr.length / mainAdjVertices.length >= 0.5;
             });
 
             similarEgos.sort();
@@ -599,7 +606,7 @@
                 let cards = cardsJSON.items.map(item => item.name);
 
                 // cards in the graph
-                const graphResp = await fetch("graph_lasso.json?0");
+                const graphResp = await fetch("graph_lasso_0.001.json?0");
                 const weightedGraph = await graphResp.json();
                 const graph = weightedGraph.adj;
                 const graphVertices = Object.keys(graph);
@@ -658,12 +665,12 @@
                 document.querySelector("#clustergram").classList.add("active");
             });
 
-            // refresh page on window resize
-            window.addEventListener("resize", () => {
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);  // pause 1 second, then refresh
-            });
+            // // refresh page on window resize
+            // window.addEventListener("resize", () => {
+            //     setTimeout(() => {
+            //         location.reload();
+            //     }, 1000);  // pause 1 second, then refresh
+            // });
         });
     </script>
 </body>

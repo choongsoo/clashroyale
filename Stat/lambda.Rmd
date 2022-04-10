@@ -1,0 +1,339 @@
+---
+title: "Lambda"
+author: "Siyuan (Tom) Zhang"
+date: '2022-04-09'
+output: html_document
+---
+
+## Prepare for Joint Model
+
+The exact same code from mod_lasso.Rmd
+
+```{r}
+library(tidyverse)
+library(broom)
+library(jsonlite)
+library(igraph)
+library(purrr)
+library(glmnet)
+
+clash <- read_csv("sample/clash_sample_500k.csv", 
+    col_types = cols(battleid = col_character(), 
+        playertag = col_character(), battletime = col_datetime(format = "%Y-%m-%d %H:%M:%S"), 
+        type = col_character(), isladdertournament = col_logical(), 
+        arenaid = col_number(), arena = col_character(), 
+        gamemodeid = col_number(), gamemode = col_character(), 
+        deckselection = col_character(), 
+        team = col_logical(), card = col_character(), 
+        cardlevel = col_number(), clantag = col_character(), 
+        startingtrophies = col_number(), 
+        trophychange = col_number(), crowns = col_number(), 
+        princesstower1hitpoints = col_number(), 
+        princesstower2hitpoints = col_number(), 
+        kingtowerhitpoints = col_number(), 
+        boatbattleside = col_character(), 
+        boatbattlewon = col_logical(), newboattowersdestroyed = col_number(), 
+        prevboattowersdestroyed = col_number(), 
+        remainingboattowers = col_number()))
+
+
+
+clash <-
+clash %>%
+  mutate(card = str_replace(card, "^Fire Spirits$", "Fire Spirit")) %>%
+  mutate(card = str_replace(card, "^Heal$", "Heal Spirit"))
+
+
+
+clash <-
+clash %>%
+  filter(!str_starts(card, "(left)|(right)"))
+
+
+
+# a matrix of card indicators
+x <- model.matrix(~0 + card + cardlevel, model.frame(~ ., clash, na.action=na.pass))
+
+# clean up col names
+colnames(x) <- str_remove_all(colnames(x), "card")
+colnames(x) <- str_replace_all(colnames(x), " ", "_")
+colnames(x) <- str_replace_all(colnames(x), "-", "_")
+colnames(x) <- str_replace_all(colnames(x), "\\.", "_")
+
+# save a copy of just card indicators
+card_indicators <- x[, -ncol(x)]
+
+# ignore levels for now
+
+# # transform card levels into the same structure of card indicators
+# card_levels = sweep(x[,-ncol(x)], MARGIN = 1, STATS = x[,ncol(x)], FUN = "*")
+# 
+# # make col names for card levels
+# colnames(card_levels) = paste(colnames(card_levels),"_Level",sep = "")
+
+# create names for all card and card interaction terms to be used later
+interactions <- labels(terms(~ .^2, data = x[1:10, -ncol(x)]))
+
+rm(x)  # free up memory
+
+# put all columns together
+cr <-
+  # cbind(card_indicators, card_levels) %>%
+  card_indicators %>%
+  as_tibble() %>%
+  mutate(battleid = clash$battleid,
+         playertag = clash$playertag,
+         battlewon = clash$trophychange) %>%
+  group_by(battleid, playertag) %>%
+  summarize_if(is.numeric, sum) %>%
+  ungroup() %>%
+  mutate(battlewon = if_else(battlewon >= 0 | is.na(battlewon), 1, 0))  # convert NA to 1
+
+rm(clash)  # free up memory
+rm(card_indicators)
+
+
+
+# get card name columns
+cards <- names(cr)[3:(ncol(cr) - 1)]
+
+# a place to store coefficients of every conditional model
+# card = main card, term = all other cards, estimate = coef; exclude intercept
+all_mods <- tibble(card = NA, term = NA, estimate = NA)
+
+for (i in 1:length(cards)) {
+  card <- cards[i]
+  
+  # subset data
+  sub <- filter(cr, !!as.symbol(card) == 1)
+  
+  # response var and predictor matrix
+  y <- sub$battlewon
+  x <- data.matrix(sub[, cards[! cards %in% card]])  # all other cards
+  
+  # perform k-fold cross-validation to find optimal lambda value
+  # note: this does not work if response is constant - problem with small datasets
+  cv_model <- cv.glmnet(x, y, alpha = 1)
+  
+  # find optimal lambda value that minimizes test MSE
+  best_lambda <- cv_model$lambda.min
+  
+  # find coefficients of best model
+  mod <- glmnet(x, y, alpha = 1, lambda = best_lambda)
+  
+  tidy <-
+    mod %>%
+      tidy() %>%
+      mutate(card = card) %>%
+      select(card, term, estimate) %>%
+      slice(-1) %>%
+      slice_max(order_by = estimate, n=8)
+  
+  all_mods <- bind_rows(all_mods, tidy)
+}
+
+# keep only positive coefs
+synergies <- 
+  all_mods %>%
+    filter(estimate > 0) %>%
+    select(card, term)
+
+# add back cards with no positive coefs
+tmp <- tibble(card = cards, term = NA)
+no_synergies <- anti_join(tmp, synergies, by = "card")  # get all cards not found in synergies df
+# synergies <- bind_rows(synergies, no_synergies)
+
+
+
+g <- graph_from_data_frame(synergies)
+# plot(g)
+# cliques(g, min = 2, max = 2)
+clique_out <- cliques(g, min = 2, max = 2)
+
+
+
+ints <-
+clique_out %>%
+  map(., function(clique) {
+    vertices <- as_ids(clique)
+    vertices <- vertices[vertices != "NA"]
+    if (length(vertices) == 1) {  # an interaction needs at least 2 terms
+      return(NULL)
+    } else {
+      return(paste(vertices, collapse = ":"))
+    }
+  }) %>%
+  unlist()
+```
+
+## Joint Model
+
+Previously in mod_lasso.Rmd, we were tuning lambda with cross-validation. Now, just want to crank it up to thin out interactions even more.
+
+```{r}
+f <- paste(
+  "battlewon ~",
+  paste(cards, collapse = " + "),
+  " + ",
+  paste(ints, collapse = " + ")
+)
+
+# sub <- cr %>% slice(1:50000)  # temporary solution to reduce wait time
+
+# mod_joint <- glm(f, data = cr, family = "binomial")
+
+# make predictor matrix
+y <- cr$battlewon
+df <- cr[,-c(1, 2)]  # keep cards & battlewon (response)
+x <- model.matrix(as.formula(f), data = df)[,-1]  # x matrix for glmnet()
+```
+
+Lasso CV fit
+
+```{r}
+# perform k-fold cross-validation to find optimal lambda value
+cv_model <- cv.glmnet(x, y, alpha = 1)
+
+saveRDS(cv_model, "mod_cv.rds")
+```
+
+Load CV fit
+
+```{r}
+cv_model <- readRDS("mod_cv.rds")
+```
+
+CV best lambda
+
+```{r}
+# find optimal lambda value that minimizes test MSE
+lambda_min <- cv_model$lambda.min
+lambda_min
+```
+
+CV largest value of lambda such that error is within 1 standard error of the minimum.
+
+```{r}
+lambda_1se <- cv_model$lambda.1se
+lambda_1se
+```
+
+CV MSE vs log(lambda) plot
+
+```{r}
+plot(cv_model)
+```
+
+Experiment with lambdas
+
+```{r}
+# mod_joint_min <- glmnet(x, y, alpha = 1, lambda = lambda_min)
+mod_joint_min <- readRDS("mod_joint.rds")
+
+mod_joint_1se <- glmnet(x, y, alpha = 1, lambda = lambda_1se)
+saveRDS(mod_joint_1se, "mod_joint_1se.rds")
+
+mod_joint_0.001 <- glmnet(x, y, alpha = 1, lambda = 0.001)
+saveRDS(mod_joint_0.001, "mod_joint_0.001.rds")
+
+mod_joint_0.01 <- glmnet(x, y, alpha = 1, lambda = 0.01)
+saveRDS(mod_joint_0.01, "mod_joint_0.01.rds")
+
+mod_joint_0.1 <- glmnet(x, y, alpha = 1, lambda = 0.1)
+saveRDS(mod_joint_0.1, "mod_joint_0.1.rds")
+```
+
+## Model Eval
+
+Load models
+
+```{r}
+mod_joint_min <- readRDS("mod_joint.rds")
+mod_joint_1se <- readRDS("mod_joint_1se.rds")
+mod_joint_0.001 <- readRDS("mod_joint_0.001.rds")
+mod_joint_0.01 <- readRDS("mod_joint_0.01.rds")
+mod_joint_0.1 <- readRDS("mod_joint_0.1.rds")
+```
+
+How many interaction terms are zeroed out in each joint model with different lambdas?
+
+```{r}
+mod_joint_min %>%
+  tidy() %>%
+  filter(str_detect(term, ":")) %>%
+  mutate(zero = if_else(abs(estimate) < 0.01, 1, 0)) %>%
+  summarise(percent_zero = sum(zero) / n(), n = n())
+```
+
+```{r}
+mod_joint_1se %>%
+  tidy() %>%
+  filter(str_detect(term, ":")) %>%
+  mutate(zero = if_else(abs(estimate) < 0.01, 1, 0)) %>%
+  summarise(percent_zero = sum(zero) / n(), n = n())
+```
+
+```{r}
+mod_joint_0.001 %>%
+  tidy() %>%
+  filter(str_detect(term, ":")) %>%
+  mutate(zero = if_else(abs(estimate) < 0.01, 1, 0)) %>%
+  summarise(percent_zero = sum(zero) / n(), n = n())
+```
+
+```{r}
+mod_joint_0.01 %>%
+  tidy()
+```
+
+```{r}
+mod_joint_0.1 %>%
+  tidy()
+```
+
+## Get Positive Interaction Terms
+
+***This is the final graph***
+
+```{r}
+df_ints_positive <-
+tidy(mod_joint_0.001) %>%
+  filter(str_detect(term, ":")) %>%
+  filter(estimate > 0) %>%
+  arrange(desc(estimate)) %>%
+  separate(term, c("term1", "term2"), sep = ":")
+```
+
+## Network
+
+Build an adjacency list that represents this weighted graph.
+
+```{r}
+graph <- list()
+graph[["adj"]] = list()
+graph[["wgt"]] = list()
+
+for (i in 1:nrow(df_ints_positive)) {
+  card1 <- df_ints_positive$term1[i]
+  card2 <- df_ints_positive$term2[i]
+  weight <- df_ints_positive$estimate[i]
+  
+  graph[["adj"]][[card1]] <- append(graph[["adj"]][[card1]], card2)
+  graph[["adj"]][[card2]] <- append(graph[["adj"]][[card2]], card1)
+  
+  graph[["wgt"]][[paste0(card1, ":", card2)]] <- unbox(weight)
+  graph[["wgt"]][[paste0(card2, ":", card1)]] <- unbox(weight)
+}
+```
+
+## Save Weighted Graph to JSON
+
+```{r}
+json <- toJSON(graph)
+write(json, file = "graph_lasso_0.001.json")
+```
+
+## Clustergram
+
+A clustergram (heatmap + hierarchical clustering dendrogram) will be produced with a Python script.
+See clustergram.py
