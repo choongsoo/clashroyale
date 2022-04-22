@@ -37,10 +37,6 @@ for card1 in cards:
 # clustergram
 clustergram = dashbio.Clustergram(
     data=np.array(matrix),
-    # row_dist=lambda u, v: np.sqrt(((u-v)**2).sum()),
-    # col_dist=lambda u, v: np.sqrt(((u-v)**2).sum()),
-    row_dist="jaccard",
-    col_dist="jaccard",
     row_labels=cards,
     column_labels=cards,
     height=1300,
@@ -50,18 +46,18 @@ clustergram = dashbio.Clustergram(
     },
     line_width=2,
     display_ratio=[0.2, 0.4],
-    color_map=[  # plotly.express.colors.sequential.YlOrRd
-        [0.0, 'black'],
-        [0.1, 'rgb(61,0,18)'],  # try
-        [0.2, 'rgb(128,0,38)'],
-        [0.3, 'rgb(189,0,38)'],
-        [0.4, 'rgb(227,26,28)'],
-        [0.5, 'rgb(252,78,42)'],
-        [0.6, 'rgb(253,141,60)'],
-        [0.7, 'rgb(254,178,76)'],
-        [0.8, 'rgb(254,217,118)'],
-        [0.9, 'rgb(255,237,160)'],
-        [1.0, 'rgb(255,255,204)'],
+    color_map=[  # plotly.express.colors.sequential.Greys
+        [0.0, 'rgb(255,255,255)'],
+        [0.1, 'rgb(250,250,250)'],
+        [0.2, 'rgb(240,240,240)'],
+        [0.3, 'rgb(217,217,217)'],
+        [0.4, 'rgb(189,189,189)'],
+        [0.5, 'rgb(150,150,150)'],
+        [0.6, 'rgb(115,115,115)'],
+        [0.7, 'rgb(82,82,82)'],
+        [0.8, 'rgb(37,37,37)'],
+        [0.9, 'rgb(22,22,22)'],
+        [1.0, 'rgb(0,0,0)']
     ]
 )
 
