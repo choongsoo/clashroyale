@@ -148,7 +148,7 @@
         <script src="js/clustergram.js"></script>
 
         <!-- floating menus -->
-        <script src="js/float.js?3"></script>
+        <script src="js/float.js?4"></script>
 
         <!-- nav bar control event listeners -->
         <script>
@@ -195,8 +195,7 @@
                         await insertSimilarEgoFloat(
                             graph,
                             graphVertices,
-                            selected[0],
-                            selected[0]
+                            selected
                         );
 
                         // insert ego network
@@ -216,8 +215,7 @@
                             await insertSimilarEgoFloat(
                                 graph,
                                 graphVertices,
-                                selected[0],
-                                selected[0]
+                                selected
                             );
                             document.querySelector("#container").innerHTML = "";
                             insertGraph(selected);

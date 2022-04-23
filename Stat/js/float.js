@@ -27,24 +27,22 @@ async function insertSelectEgoFloat(graphVertices) {
     return select;
 }
 
-async function insertSimilarEgoFloat(
-    graph,
-    graphVertices,
-    mainValue,
-    selectedValue
-) {
-    // a user can select from a list of cards that are similar to the main ego card
+async function insertSimilarEgoFloat(graph, graphVertices, mainValues) {
+    // a user can select from a list of cards that are similar to the main ego cards
     const selectSimilar = document.createElement("select");
     selectSimilar.id = "select-similar";
     selectSimilar.classList.add("form-select", "form-select-sm");
 
-    // get set of adjacent cards of curr ego card
-    const mainEgo = cleanUpName(mainValue);
-    const mainAdjCards = graph[mainEgo];
+    // get set of adjacent cards of curr ego cards
+    const mainEgos = mainValues.map((card) => cleanUpName(card));
+    let mainAdjCards = [];
+    mainEgos.forEach((main) => {
+        mainAdjCards = mainAdjCards.concat(graph[main]);
+    });
     const mainAdjVertices = mainAdjCards.map((card) => cleanUpName(card));
 
     // iterate through graph (adjacency list) to identify all similar ego cards
-    // threshold: having at least 1/2 of the same adjacent cards
+    // threshold: if at least 1/2 of a card's adjacencies are in current ego network
     const similarEgos = graphVertices.filter((vertex) => {
         const currAdjVertices = graph[vertex];
         // set intersection
@@ -52,7 +50,7 @@ async function insertSimilarEgoFloat(
             currAdjVertices.includes(v)
         );
         // if similarity size exceeds threshould, filter keeps it
-        return mainIntersectCurr.length / mainAdjVertices.length >= 0.5;
+        return mainIntersectCurr.length / currAdjVertices.length >= 0.5;
     });
 
     similarEgos.sort();
@@ -68,7 +66,7 @@ async function insertSimilarEgoFloat(
             selectSimilar.appendChild(option);
         });
 
-    selectSimilar.value = selectedValue;
+    selectSimilar.value = similarEgos[0];
 
     // label for select-similar
     const selectSimilarLabel = document.createElement("label");
