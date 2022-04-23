@@ -97,6 +97,10 @@ async function makeVertexCardMap() {
 }
 
 function clearContainer() {
-    const container = document.querySelector("#container");
-    container.innerHTML = "";
+    document.querySelector("#container").innerHTML = "";
+    document.querySelector("#similar-ego-float").innerHTML = "";
+}
+
+function setFloatingDivVisibility(visibility) {
+    document.querySelector("#floating-div").style.visibility = visibility;
 }

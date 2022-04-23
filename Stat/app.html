@@ -68,52 +68,31 @@
             </div>
         </nav>
 
-        <!-- a container for the graph/ego-network/heatmap/clustergram -->
-        <div id="container" class="mt-5">
-            <div style="position: fixed">
+        <!-- the main display area under nav bar -->
+        <div id="main" class="mt-5">
+            <div id="floating-div" style="position: fixed; visibility: hidden">
                 <div
+                    id="select-ego-float"
                     class="bg-light text-light p-2 mt-3 ms-2 rounded"
                     style="float: left; clear: left"
                 >
                     <select
+                        id="select-ego"
                         class="select bg-primary"
-                        multiple
                         data-mdb-clear-button="true"
-                        id="multi"
-                    >
-                        <option value="1">One</option>
-                        <option value="2">Two</option>
-                        <option value="3">Three</option>
-                        <option value="4">Four</option>
-                        <option value="5">Five</option>
-                        <option>Six</option>
-                    </select>
+                    ></select>
                     <label class="form-label select-label"
                         >Select Ego Card(s)</label
                     >
                 </div>
                 <div
-                    class="bg-light text-light p-2 mt-3 ms-2 rounded"
+                    id="similar-ego-float"
+                    class="bg-primary text-light p-2 mt-3 ms-2 rounded"
                     style="float: left; clear: left"
-                >
-                    <select
-                        class="select"
-                        multiple
-                        data-mdb-clear-button="true"
-                        id="multi"
-                    >
-                        <option value="1">One</option>
-                        <option value="2">Two</option>
-                        <option value="3">Three</option>
-                        <option value="4">Four</option>
-                        <option value="5">Five</option>
-                        <option>Six</option>
-                    </select>
-                    <label class="form-label select-label"
-                        >Select Ego Card(s)</label
-                    >
-                </div>
+                ></div>
             </div>
+            <!-- a container for the graph/ego-network/heatmap/clustergram -->
+            <div id="container"></div>
         </div>
 
         <!-- MDB 5 JS -->
@@ -133,7 +112,7 @@
         <script src="https://cdn.plot.ly/plotly-2.9.0.min.js"></script>
 
         <!-- helper functions -->
-        <script src="js/helpers.js?0"></script>
+        <script src="js/helpers.js?1"></script>
 
         <!-- graph function -->
         <script src="js/graph.js?0"></script>
@@ -189,8 +168,7 @@
                             graph,
                             graphVertices,
                             select.value,
-                            select.value,
-                            container
+                            select.value
                         );
 
                         // insert ego network
@@ -198,19 +176,18 @@
 
                         // make select dropdown responsive
                         select.addEventListener("change", async () => {
-                            document.querySelector("#graph-svg").remove();
-                            document
-                                .querySelector("#similar-ego-float")
-                                .remove();
+                            clearContainer();
                             await insertSimilarEgoFloat(
                                 graph,
                                 graphVertices,
                                 select.value,
-                                select.value,
-                                container
+                                select.value
                             );
                             insertGraph(select.value);
                         });
+
+                        // set floating div visibility
+                        setFloatingDivVisibility("visible");
 
                         // update nav bar button highlight
                         document
@@ -229,6 +206,7 @@
                 document
                     .querySelector("#heatmap")
                     .addEventListener("click", () => {
+                        setFloatingDivVisibility("hidden");
                         clearContainer();
                         insertHeatmap();
                         document
@@ -249,6 +227,7 @@
                 document
                     .querySelector("#clustergram")
                     .addEventListener("click", () => {
+                        setFloatingDivVisibility("hidden");
                         clearContainer();
                         insertClustergram();
                         document
