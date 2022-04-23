@@ -139,7 +139,7 @@
         <script src="js/helpers.js?4"></script>
 
         <!-- graph function -->
-        <script src="js/graph.js?5"></script>
+        <script src="js/graph.js?6"></script>
 
         <!-- heatmap function -->
         <script src="js/heatmap.js"></script>
@@ -164,6 +164,8 @@
                         // intentional: reload instead of DOM manipulation - reduces lag
                         location.reload();
                     });
+
+                let i = 0; // select.addEventListener() can only add once
 
                 // nav bar ego button
                 document
@@ -201,25 +203,32 @@
                         // insert ego network
                         insertGraph(selected);
 
-                        // make select dropdown responsive
-                        select.addEventListener("change", async () => {
-                            clearContainer();
-                            const selected = getSelectedEgos();
-                            const similarEgoFloat =
-                                document.querySelector("#similar-ego-float");
-                            if (selected.length == 0) {
-                                similarEgoFloat.style.visibility = "hidden";
-                                return;
-                            }
-                            similarEgoFloat.style.visibility = "visible";
-                            await insertSimilarEgoFloat(
-                                graph,
-                                graphVertices,
-                                selected
-                            );
-                            document.querySelector("#container").innerHTML = "";
-                            insertGraph(selected);
-                        });
+                        if (i == 0) {
+                            // make select dropdown responsive
+                            select.addEventListener("change", async () => {
+                                clearContainer();
+                                const selected = getSelectedEgos();
+                                const similarEgoFloat =
+                                    document.querySelector(
+                                        "#similar-ego-float"
+                                    );
+                                if (selected.length == 0) {
+                                    similarEgoFloat.style.visibility = "hidden";
+                                    return;
+                                }
+                                similarEgoFloat.style.visibility = "visible";
+                                await insertSimilarEgoFloat(
+                                    graph,
+                                    graphVertices,
+                                    selected
+                                );
+                                document.querySelector("#container").innerHTML =
+                                    "";
+                                insertGraph(selected);
+                            });
+                        }
+
+                        i++;
 
                         // set floating div visibility
                         setFloatingDivVisibility("visible");
