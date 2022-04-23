@@ -14,9 +14,13 @@ async function insertSelectEgoFloat(graphVertices) {
     cards.sort();
 
     // each option is a card
-    cards.forEach((card) => {
+    cards.forEach((card, i) => {
         const option = document.createElement("option");
         option.innerText = card;
+        if (i == 0) {
+            // pre-select the first option
+            option.selected = true;
+        }
         select.appendChild(option);
     });
 
@@ -75,12 +79,13 @@ async function insertSimilarEgoFloat(
 
     // insert floating menu to DOM
     const floating = document.querySelector("#similar-ego-float");
+    floating.innerHTML = "";
     floating.appendChild(selectSimilarLabel);
     floating.appendChild(selectSimilar);
 
     // make select-similar responsive
     selectSimilar.addEventListener("change", async () => {
-        document.querySelector("#graph-svg").remove();
-        insertGraph(selectSimilar.value);
+        document.querySelector("#container").innerHTML = "";
+        insertGraph([selectSimilar.value]);
     });
 }

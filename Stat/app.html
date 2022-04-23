@@ -70,16 +70,26 @@
 
         <!-- the main display area under nav bar -->
         <div id="main" class="mt-5">
-            <div id="floating-div" style="position: fixed; visibility: hidden">
+            <div
+                id="floating-div"
+                style="
+                    position: fixed;
+                    visibility: hidden;
+                    float: left;
+                    clear: left;
+                "
+            >
                 <div
                     id="select-ego-float"
-                    class="bg-light text-light p-2 mt-3 ms-2 rounded"
-                    style="float: left; clear: left"
+                    class="bg-light text-light p-2 mt-3 ms-2 pe-4 rounded"
+                    style="float: left; clear: left; width: 100vw"
                 >
                     <select
                         id="select-ego"
                         class="select bg-primary"
+                        multiple
                         data-mdb-clear-button="true"
+                        data-mdb-filter="true"
                     ></select>
                     <label class="form-label select-label"
                         >Select Ego Card(s)</label
@@ -112,10 +122,10 @@
         <script src="https://cdn.plot.ly/plotly-2.9.0.min.js"></script>
 
         <!-- helper functions -->
-        <script src="js/helpers.js?1"></script>
+        <script src="js/helpers.js?3"></script>
 
         <!-- graph function -->
-        <script src="js/graph.js?0"></script>
+        <script src="js/graph.js?4"></script>
 
         <!-- heatmap function -->
         <script src="js/heatmap.js"></script>
@@ -124,7 +134,7 @@
         <script src="js/clustergram.js"></script>
 
         <!-- floating menus -->
-        <script src="js/float.js"></script>
+        <script src="js/float.js?2"></script>
 
         <!-- nav bar control event listeners -->
         <script>
@@ -147,6 +157,7 @@
                     .addEventListener("click", async () => {
                         // clear content first
                         clearContainer();
+                        document.querySelector("#select-ego").innerHTML = "";
 
                         // some helper variables
                         const graphResp = await fetch(
@@ -163,27 +174,40 @@
                             container
                         );
 
+                        // const select = document.querySelector("#select-ego");
+
+                        const selected = getSelectedEgos();
+
                         // insert floating menu
+
                         await insertSimilarEgoFloat(
                             graph,
                             graphVertices,
-                            select.value,
-                            select.value
+                            selected[0],
+                            selected[0]
                         );
 
                         // insert ego network
-                        insertGraph(select.value);
+                        insertGraph(selected);
 
                         // make select dropdown responsive
                         select.addEventListener("change", async () => {
                             clearContainer();
+                            const selected = getSelectedEgos();
+                            const similarEgoFloat =
+                                document.querySelector("#similar-ego-float");
+                            if (selected.length == 0) {
+                                similarEgoFloat.style.visibility = "hidden";
+                                return;
+                            }
+                            similarEgoFloat.style.visibility = "visible";
                             await insertSimilarEgoFloat(
                                 graph,
                                 graphVertices,
-                                select.value,
-                                select.value
+                                selected[0],
+                                selected[0]
                             );
-                            insertGraph(select.value);
+                            insertGraph(selected);
                         });
 
                         // set floating div visibility

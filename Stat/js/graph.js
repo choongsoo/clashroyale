@@ -26,19 +26,30 @@ async function constructGraph(ego = null) {
 
     // build ego network if specified
     if (ego) {
-        const mainCard = cleanUpName(ego);
-        const mainAdj = graph[mainCard];
+        if (ego.length == 0) {
+            return document.createElement("div");
+        } else {
+            const mainCards = ego.map((card) => cleanUpName(card));
+            let mainAdj = [];
+            const egoNetwork = {};
 
-        const egoNetwork = {};
-        egoNetwork[mainCard] = mainAdj;
+            mainCards.forEach((main) => {
+                egoNetwork[main] = graph[main];
+                mainAdj = mainAdj.concat(graph[main]);
+            });
 
-        mainAdj.forEach((adj) => {
-            const adjAdj = graph[adj];
-            egoNetwork[adj] = mainAdj.filter((adj) => adjAdj.includes(adj)); // set intersection
-            egoNetwork[adj].push(mainCard);
-        });
+            mainAdj.forEach((adj) => {
+                const adjAdj = graph[adj];
+                egoNetwork[adj] = mainAdj.filter((adj) => adjAdj.includes(adj)); // set intersection
+                mainCards.forEach((main) => {
+                    if (graph[adj].includes(main)) {
+                        egoNetwork[adj].push(main);
+                    }
+                });
+            });
 
-        graph = egoNetwork;
+            graph = egoNetwork;
+        }
     }
 
     // transform graph data into D3-compliant format
@@ -74,7 +85,7 @@ async function constructGraph(ego = null) {
         strength = -150;
     if (ego) {
         distance = 100;
-        strength = -1000;
+        strength = -250;
     }
 
     const simulation = d3
@@ -87,6 +98,10 @@ async function constructGraph(ego = null) {
     // create DOM elements
     const width = getViewportWidth(), // helper vars - old: 1400 x 700
         height = getViewportHeight() - 40;
+    let yOffset = 0;
+    if (ego) {
+        yOffset = 55;
+    }
 
     const svg = d3
         .create("svg")
@@ -141,8 +156,8 @@ async function constructGraph(ego = null) {
 
         node.attr("transform", (d) => {
             // restrict node coordinates to be within container boundaries
-            const newX = restrictCoordinate(d.x, width, imgWidth);
-            const newY = restrictCoordinate(d.y, height, imgHeight);
+            const newX = restrictCoordinate(d.x, width, imgWidth, yOffset);
+            const newY = restrictCoordinate(d.y, height, imgHeight, yOffset);
             d.x = newX; // important: update source data so that edges (links) can be updated
             d.y = newY;
             return "translate(" + newX + "," + newY + ")";
@@ -158,8 +173,18 @@ async function constructGraph(ego = null) {
         }
 
         function dragged(event) {
-            event.subject.fx = restrictCoordinate(event.x, width, imgWidth);
-            event.subject.fy = restrictCoordinate(event.y, height, imgHeight);
+            event.subject.fx = restrictCoordinate(
+                event.x,
+                width,
+                imgWidth,
+                yOffset
+            );
+            event.subject.fy = restrictCoordinate(
+                event.y,
+                height,
+                imgHeight,
+                yOffset
+            );
         }
 
         function dragended(event) {

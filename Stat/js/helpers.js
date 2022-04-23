@@ -18,9 +18,9 @@ function cleanUpName(originalName) {
  * bound: width | height (container's)
  * padding: usually the width/height of the node
  */
-function restrictCoordinate(coord, bound, padding) {
+function restrictCoordinate(coord, bound, padding, yOffset = 0) {
     return Math.max(
-        (-1 * bound) / 2 + padding,
+        (-1 * bound) / 2 + padding + yOffset,
         Math.min(bound / 2 - padding, coord)
     );
 }
@@ -103,4 +103,10 @@ function clearContainer() {
 
 function setFloatingDivVisibility(visibility) {
     document.querySelector("#floating-div").style.visibility = visibility;
+}
+
+function getSelectedEgos() {
+    const select = document.querySelector("#select-ego");
+    var selected = [...select.selectedOptions].map((option) => option.value);
+    return selected;
 }
