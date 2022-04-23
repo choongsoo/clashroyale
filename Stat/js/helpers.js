@@ -98,7 +98,5 @@ async function makeVertexCardMap() {
 
 function clearContainer() {
     const container = document.querySelector("#container");
-    const navEgoSelect = document.querySelector("#nav-ego-select");
     container.innerHTML = "";
-    navEgoSelect.innerHTML = "";
 }

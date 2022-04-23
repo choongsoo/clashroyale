@@ -53,10 +53,6 @@
                                 >Ego Network</a
                             >
                         </li>
-                        <li
-                            class="nav-item d-flex align-items-center"
-                            id="nav-ego-select"
-                        ></li>
                         <li class="nav-item">
                             <a class="nav-link" href="#" id="heatmap"
                                 >Heatmap</a
@@ -73,7 +69,52 @@
         </nav>
 
         <!-- a container for the graph/ego-network/heatmap/clustergram -->
-        <div id="container" class="mt-5"></div>
+        <div id="container" class="mt-5">
+            <div style="position: fixed">
+                <div
+                    class="bg-light text-light p-2 mt-3 ms-2 rounded"
+                    style="float: left; clear: left"
+                >
+                    <select
+                        class="select bg-primary"
+                        multiple
+                        data-mdb-clear-button="true"
+                        id="multi"
+                    >
+                        <option value="1">One</option>
+                        <option value="2">Two</option>
+                        <option value="3">Three</option>
+                        <option value="4">Four</option>
+                        <option value="5">Five</option>
+                        <option>Six</option>
+                    </select>
+                    <label class="form-label select-label"
+                        >Select Ego Card(s)</label
+                    >
+                </div>
+                <div
+                    class="bg-light text-light p-2 mt-3 ms-2 rounded"
+                    style="float: left; clear: left"
+                >
+                    <select
+                        class="select"
+                        multiple
+                        data-mdb-clear-button="true"
+                        id="multi"
+                    >
+                        <option value="1">One</option>
+                        <option value="2">Two</option>
+                        <option value="3">Three</option>
+                        <option value="4">Four</option>
+                        <option value="5">Five</option>
+                        <option>Six</option>
+                    </select>
+                    <label class="form-label select-label"
+                        >Select Ego Card(s)</label
+                    >
+                </div>
+            </div>
+        </div>
 
         <!-- MDB 5 JS -->
         <script src="js/mdb.min.js"></script>
@@ -92,10 +133,10 @@
         <script src="https://cdn.plot.ly/plotly-2.9.0.min.js"></script>
 
         <!-- helper functions -->
-        <script src="js/helpers.js"></script>
+        <script src="js/helpers.js?0"></script>
 
         <!-- graph function -->
-        <script src="js/graph.js"></script>
+        <script src="js/graph.js?0"></script>
 
         <!-- heatmap function -->
         <script src="js/heatmap.js"></script>
@@ -128,43 +169,23 @@
                         // clear content first
                         clearContainer();
 
-                        // make select dropdown menu
-                        const select = document.createElement("select");
-                        select.classList.add("form-select", "form-select-sm");
-
-                        // all cards available - need their nicely formatted names
-                        const cardsResp = await fetch("cards.json");
-                        const cardsJSON = await cardsResp.json();
-                        let cards = cardsJSON.items.map((item) => item.name);
-
-                        // cards in the graph
+                        // some helper variables
                         const graphResp = await fetch(
                             "graph_lasso_0.001.json?0"
                         );
                         const weightedGraph = await graphResp.json();
                         const graph = weightedGraph.adj;
                         const graphVertices = Object.keys(graph);
+                        const container = document.querySelector("#container");
 
-                        // only keep names for cards that exist in the graph
-                        cards = cards.filter((card) =>
-                            graphVertices.includes(cleanUpName(card))
+                        // insert select ego
+                        const select = await insertSelectEgoFloat(
+                            graphVertices,
+                            container
                         );
-                        cards.sort();
-
-                        // each option is a card
-                        cards.forEach((card) => {
-                            const option = document.createElement("option");
-                            option.innerText = card;
-                            select.appendChild(option);
-                        });
-
-                        // select dropdown is ready
-                        document
-                            .querySelector("#nav-ego-select")
-                            .appendChild(select);
 
                         // insert floating menu
-                        await insertFloatingMenu(
+                        await insertSimilarEgoFloat(
                             graph,
                             graphVertices,
                             select.value,
@@ -177,8 +198,11 @@
 
                         // make select dropdown responsive
                         select.addEventListener("change", async () => {
-                            container.innerHTML = "";
-                            await insertFloatingMenu(
+                            document.querySelector("#graph-svg").remove();
+                            document
+                                .querySelector("#similar-ego-float")
+                                .remove();
+                            await insertSimilarEgoFloat(
                                 graph,
                                 graphVertices,
                                 select.value,

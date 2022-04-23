@@ -90,6 +90,7 @@ async function constructGraph(ego = null) {
 
     const svg = d3
         .create("svg")
+        .attr("id", "graph-svg")
         .attr("width", width)
         .attr("height", height)
         .attr("viewBox", [-width / 2, -height / 2, width, height])

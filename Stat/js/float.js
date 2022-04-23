@@ -1,7 +1,61 @@
 "use strict";
 
-// select similar ego floating menu
-async function insertFloatingMenu(
+async function insertSelectEgoFloat(graphVertices, container) {
+    // make multiselect dropdown menu
+    const select = document.createElement("select");
+    select.classList.add("form-select", "form-select-sm");
+    // const parser = new DOMParser();
+    // const select = parser.parseFromString(
+    //     `<select class="select" multiple data-mdb-clear-button="true" id="multi"></select>`,
+    //     "text/html"
+    // ).body.firstElementChild;
+
+    // all cards available - need their nicely formatted names
+    const cardsResp = await fetch("cards.json");
+    const cardsJSON = await cardsResp.json();
+    let cards = cardsJSON.items.map((item) => item.name);
+
+    // only keep names for cards that exist in the graph
+    cards = cards.filter((card) => graphVertices.includes(cleanUpName(card)));
+    cards.sort();
+
+    // each option is a card
+    cards.forEach((card) => {
+        const option = document.createElement("option");
+        option.innerText = card;
+        select.appendChild(option);
+    });
+
+    console.log(select);
+
+    // make a fixed floating div to contain nav-ego-select's div and potentially select-similar's div
+    const floatingDiv = document.createElement("div");
+    floatingDiv.id = "floating-div";
+    floatingDiv.style.position = "fixed";
+
+    // a div for nav-ego-select
+    const navEgoSelectDiv = document.createElement("div");
+    navEgoSelectDiv.classList.add(
+        "bg-primary",
+        "text-light",
+        "light",
+        "p-2",
+        "mt-3",
+        "ms-2",
+        "rounded"
+    );
+    navEgoSelectDiv.style.float = "left";
+    navEgoSelectDiv.style.clear = "left";
+
+    // select dropdown is ready to be inserted to DOM
+    navEgoSelectDiv.appendChild(select);
+    floatingDiv.appendChild(navEgoSelectDiv);
+    container.appendChild(floatingDiv);
+
+    return select;
+}
+
+async function insertSimilarEgoFloat(
     graph,
     graphVertices,
     mainValue,
@@ -9,8 +63,7 @@ async function insertFloatingMenu(
     container
 ) {
     const floating = document.createElement("div");
-    floating.style.zIndex = 100; // this needs to be the highest amongst all elements to float
-    floating.style.position = "fixed";
+    floating.id = "similar-ego-float";
     floating.classList.add(
         "bg-primary",
         "text-light",
@@ -19,6 +72,8 @@ async function insertFloatingMenu(
         "ms-2",
         "rounded"
     );
+    floating.style.float = "left";
+    floating.style.clear = "left";
 
     // a user can select from a list of cards that are similar to the main ego card
     const selectSimilar = document.createElement("select");
@@ -68,19 +123,11 @@ async function insertFloatingMenu(
     floating.appendChild(selectSimilarLabel);
     floating.appendChild(selectSimilar);
 
-    container.appendChild(floating);
+    container.querySelector("#floating-div").appendChild(floating);
 
     // make select-similar responsive
     selectSimilar.addEventListener("change", async () => {
-        const currSelectSimilarValue = selectSimilar.value;
-        container.innerHTML = "";
-        await insertFloatingMenu(
-            graph,
-            graphVertices,
-            mainValue,
-            currSelectSimilarValue,
-            container
-        );
-        insertGraph(currSelectSimilarValue);
+        document.querySelector("#graph-svg").remove();
+        insertGraph(selectSimilar.value);
     });
 }
