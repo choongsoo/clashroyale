@@ -102,7 +102,8 @@ function clearContainer() {
 }
 
 function setFloatingDivVisibility(visibility) {
-    document.querySelector("#floating-div").style.visibility = visibility;
+    document.querySelector("#select-ego-float").style.visibility = visibility;
+    document.querySelector("#similar-ego-float").style.visibility = visibility;
 }
 
 function getSelectedEgos() {
