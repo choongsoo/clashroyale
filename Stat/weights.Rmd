@@ -97,8 +97,11 @@ cards_matrix <- cr[,3:(ncol(cr) - 1)]
 
 tibble(card = names(cards_matrix),
        count = colSums(cards_matrix)) %>%
-  ggplot(., aes(x = count, y = card)) +
-  geom_col()
+  slice(1:20) %>%
+  ggplot(., aes(x = card, y = count)) +
+  geom_col() +
+  coord_flip() +
+  theme_bw()
 ```
 
 ## Card Weights
@@ -266,19 +269,23 @@ mod_joint_w <- readRDS("mod_joint_w.rds")
 Percentage of zeroed out predictors in both joint models
 
 ```{r}
+mod_joint_o
+
 mod_joint_o %>%
   tidy() %>%
   filter(str_detect(term, ":")) %>%
-  mutate(zero = if_else(abs(estimate) < 0.05, 1, 0)) %>%
-  summarise(percent_zero = sum(zero) / n())
+  mutate(zero = if_else(abs(estimate) < 0.01, 1, 0), positive = if_else(estimate > 0, 1, 0)) %>%
+  summarise(percent_zero = sum(zero) / n(), n = n(), sum(zero), n()-sum(zero), sum(positive))
 ```
 
 ```{r}
+mod_joint_w
+
 mod_joint_w %>%
   tidy() %>%
   filter(str_detect(term, ":")) %>%
-  mutate(zero = if_else(abs(estimate) < 0.05, 1, 0)) %>%
-  summarise(percent_zero = sum(zero) / n())
+  mutate(zero = if_else(abs(estimate) < 0.01, 1, 0), positive = if_else(estimate > 0, 1, 0)) %>%
+  summarise(percent_zero = sum(zero) / n(), n = n(), sum(zero), n()-sum(zero), sum(positive))
 ```
 
 ```{r}

@@ -291,6 +291,22 @@ mod_joint_0.1 %>%
   tidy()
 ```
 
+```{r}
+tibble(non_zero_ints = c(710, 497, 366, 0),
+       lambda = c(2.598772e-06, 0.0004757671, 0.001, 0.01)) %>%
+  ggplot(., aes(x = lambda, y = non_zero_ints)) +
+  geom_point(size = 2) +
+  geom_smooth(color = "black") +
+  labs(y = "non-zero interactions") +
+  theme_bw()
+```
+
+
+
+
+
+
+
 ## Get Positive Interaction Terms
 
 ***This is the final graph***
