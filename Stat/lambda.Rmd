@@ -222,6 +222,7 @@ CV MSE vs log(lambda) plot
 
 ```{r}
 plot(cv_model)
+abline(v = -6.9, col = "red", lty = 3)
 ```
 
 Experiment with lambdas
