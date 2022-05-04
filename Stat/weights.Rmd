@@ -98,9 +98,10 @@ cards_matrix <- cr[,3:(ncol(cr) - 1)]
 tibble(card = names(cards_matrix),
        count = colSums(cards_matrix)) %>%
   slice(1:20) %>%
-  ggplot(., aes(x = card, y = count)) +
+  ggplot(., aes(x = fct_reorder(card, count), y = count)) +
   geom_col() +
   coord_flip() +
+  labs(x = "card") +
   theme_bw()
 ```
 
@@ -303,5 +304,56 @@ mod_joint_w %>%
   ggplot(., aes(x = estimate)) +
   geom_histogram() +
   scale_x_continuous(limits = c(-0.05, 0.05))
+```
+
+Two way table construction
+
+```{r}
+o <-
+tidy(mod_joint_o) %>%
+  filter(str_detect(term, ":")) %>%
+  mutate(zero = if_else(abs(estimate) < 0.01, 1, 0)) %>%
+  select(term, zero)
+o
+```
+
+```{r}
+w <-
+tidy(mod_joint_w) %>%
+  filter(str_detect(term, ":")) %>%
+  mutate(zero = if_else(abs(estimate) < 0.01, 1, 0)) %>%
+  select(term, zero)
+w
+```
+
+```{r}
+oz <- o %>% filter(zero == 1)  # zeroed interactions in original
+wz <- w %>% filter(zero == 1)  # zeroed interactions in weighted
+on <- o %>% filter(zero == 0)  # non-zero interactions in original
+wn <- w %>% filter(zero == 0)  # non-zero interactions in weighted
+```
+
+Number of coefficients that are zero in both models
+
+```{r}
+inner_join(oz, wz, by = "term")
+```
+
+zero in weighted but non zero in original
+
+```{r}
+inner_join(wz, on, by = "term")
+```
+
+non zero in weighted but zero in original
+
+```{r}
+inner_join(wn, oz, by = "term")
+```
+
+non zero in both
+
+```{r}
+inner_join(wn, on, by = "term")
 ```
 
