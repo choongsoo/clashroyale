@@ -4,6 +4,7 @@ import pandas as pd
 from numpy import nan
 from time import sleep
 from random import randrange
+from random import choice
 from collections import deque
 
 import extensions.load_api_key
@@ -61,7 +62,7 @@ def psql_insert(con, table: str, insert_tuple: tuple, integrity_error_action: st
                             integrity_error_action, primary_key, primary_key_value)
         except psycopg2.Error as e:
             # email admin on all other errors
-            email_admin(400, 'ERROR: Insertion: {}.'.format(str(e).strip()))
+            email_admin(400, 'ERROR: Insertion: {}.'.format(str(e) + '\n' + insert_cmd + '\n' + str(insert_tuple)).strip())
         else:
             # commit if successful
             con.commit()
@@ -428,28 +429,45 @@ def collect_data(init_player_tag_manual=None) -> None:
 
     # need an initial battle
 
-    if init_player_tag_manual is None:
-        init_player_tag = '#9YJUPU9LY'  # default to myself
+    # find a player with a list of battles
+    retryThreshold = 10
 
-        # use last player tag from existing player pool if any
-        last_tag = get_last_playertag(con)
-        if last_tag is not None:
-            init_player_tag = last_tag
+    init_player_tag = None
+
+    last_tag = get_last_playertag(con)
+    if last_tag is not None:
+        init_player_tag = last_tag
     else:
-        init_player_tag = init_player_tag_manual
+        random_players = get_random_playertags(con)
+        if len(random_players) > 0:
+            init_player_tag = choice(random_players)[0]
+        else:
+            # manual init player tag
+            init_player_tag = "#GYUQQCLV"
 
-    log('collect_data() started with player tag: {}'.format(init_player_tag))
+    for retryCount in range(retryThreshold):
+        log('collect_data() started with player tag: {}'.format(init_player_tag))
 
-    # retrive a battle from this player tag
-    battle_log_res = cr_api_request(init_player_tag, 'battle_log')
-    sleep(SLEEP_TIME)
+        # retrive a battle from this player tag
+        battle_log_res = cr_api_request(init_player_tag, 'battle_log')
+        sleep(SLEEP_TIME)
 
-    if battle_log_res.get('statusCode') == 200 and len(battle_log_res.get('body')) > 0:
-        # a list of dict, where each dict is a battle
-        battle_log = battle_log_res.get('body')
-        # randomly pick a battle
-        init_battle = battle_log[randrange(len(battle_log))]
-    else:
+        if battle_log_res.get('statusCode') == 200 and len(battle_log_res.get('body')) > 0:
+            # a list of dict, where each dict is a battle
+            battle_log = battle_log_res.get('body')
+            # randomly pick a battle
+            init_battle = battle_log[randrange(len(battle_log))]
+            break
+
+        random_players = get_random_playertags(con)
+        if len(random_players) > 0:
+            init_player_tag = choice(random_players)[0]
+        else:
+            print("No random players")
+            exit(1)
+
+    if retryCount >= retryThreshold - 1:
+        print(battle_log_res)
         email_admin(
             400, 'Cannot get battle log from initial player; need to manually specify one; data collection terminated.')
         exit(1)

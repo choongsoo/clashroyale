@@ -39,8 +39,8 @@ def email_admin(status_code, message):
     try:
         port = 465  # For SSL
         smtp_server = "smtp.gmail.com"
-        sender_email = "tom.zhang.dev@gmail.com"
-        receiver_email = "tom.zhang.dev@gmail.com"
+        sender_email = "sluesportsresearch@gmail.com"
+        receiver_email = "sluesportsresearch@gmail.com"
         pass_file = open(
             '{}/credentials/dev-gmail-pass.txt'.format(dirname(__file__)))
         password = pass_file.readline()
@@ -77,10 +77,20 @@ def cr_api_request(tag: str, action: str, i: int = 0) -> dict:
     # prep
     url = 'https://api.clashroyale.com/v1/'
 
+    bannedTags = None
+
     if action == 'battle_log':
         url += 'players/' + quote_plus(tag) + '/battlelog'
     elif action == 'player_info':
         url += 'players/' + quote_plus(tag)
+        fh = open('banned')
+        bannedTags = set()
+        for bannedTag in fh:
+            bannedTags.add(bannedTag.strip())
+        fh.close()
+        # skip if it's a known banned tag
+        if tag in bannedTags:
+            return {'statusCode': 404, 'body': {"reason":"notFound"}}
     elif action == 'clan_members':
         url += 'clans/' + quote_plus(tag) + '/members'
     elif action == 'player_rankings':
@@ -119,6 +129,11 @@ def cr_api_request(tag: str, action: str, i: int = 0) -> dict:
         email_admin(403, str(res))
         exit(1)
 
+    elif status_code == 404 and action == 'player_info':
+        # player not found (likely banned)
+        fh = open('banned', 'a')
+        fh.write(tag + '\n')
+        fh.close()
     elif status_code == 429:
         # request throttled: amount of requests exceeded threshold defined for API token
         # switch to another api key & notify admin

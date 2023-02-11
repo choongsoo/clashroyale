@@ -10,7 +10,7 @@ class DBConnection:
         # some arguments for psycopg2.connect()
         DBNAME = 'clash'
         USER = 'clashuser'
-        HOST = '10.32.95.90'
+        HOST = '192.168.0.123'
         PASSWORD_FILE = '{}/../credentials/psql-pass.txt'.format(dirname(__file__))
 
         # try to open password file to connect to DB
@@ -21,7 +21,7 @@ class DBConnection:
             exit(1)
 
         # try to read in password
-        passwd = pgpass_file.readline()
+        passwd = pgpass_file.readline().strip()
         if len(passwd) == 0:
             print('ERROR: Empty credential file.')
             exit(1)
