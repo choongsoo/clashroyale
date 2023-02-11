@@ -7,7 +7,7 @@ from datetime import datetime
 from urllib.parse import quote_plus
 from time import sleep
 from os import environ
-from os.path import dirname
+from os.path import dirname, isfile
 
 
 # A collection of globally-shared helper functions
@@ -40,7 +40,7 @@ def email_admin(status_code, message):
         port = 465  # For SSL
         smtp_server = "smtp.gmail.com"
         sender_email = "sluesportsresearch@gmail.com"
-        receiver_email = "sluesportsresearch@gmail.com"
+        receiver_email = "clee@stlawu.edu"
         pass_file = open(
             '{}/credentials/dev-gmail-pass.txt'.format(dirname(__file__)))
         password = pass_file.readline()
@@ -83,14 +83,18 @@ def cr_api_request(tag: str, action: str, i: int = 0) -> dict:
         url += 'players/' + quote_plus(tag) + '/battlelog'
     elif action == 'player_info':
         url += 'players/' + quote_plus(tag)
-        fh = open('banned')
-        bannedTags = set()
-        for bannedTag in fh:
-            bannedTags.add(bannedTag.strip())
-        fh.close()
-        # skip if it's a known banned tag
-        if tag in bannedTags:
-            return {'statusCode': 404, 'body': {"reason":"notFound"}}
+        if isfile('banned'):
+            fh = open('banned')
+            bannedTags = set()
+            for bannedTag in fh:
+                bannedTags.add(bannedTag.strip())
+            fh.close()
+            # skip if it's a known banned tag
+            if tag in bannedTags:
+                return {'statusCode': 404, 'body': {"reason":"notFound"}}
+        else:
+            fh = open('banned', 'w')
+            fh.close()
     elif action == 'clan_members':
         url += 'clans/' + quote_plus(tag) + '/members'
     elif action == 'player_rankings':
